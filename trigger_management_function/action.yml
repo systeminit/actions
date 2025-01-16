@@ -1,0 +1,46 @@
+name: Set Component Properties
+description: Create a changeset based off of head for a given workspace
+author: jkeiser@systeminit.com
+
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: heart
+  color: red
+
+# Define your inputs here.
+inputs:
+  workspaceId:
+    description: The ID of the workspace containing the component.
+    required: true
+  changeSetId:
+    description: The ID of the changeset containing the component.
+    required: true
+  viewId:
+    description: The ID of the view containing the component.
+    required: true
+  componentId:
+    description: The ID of the component to run the management function on.
+    required: true
+  managementPrototypeId:
+    description: The ID of the management function prototype to run.
+    required: true
+  apiToken:
+    description: |
+      The API token. You can create one by going to
+      https://auth.systeminit.com/workspaces/, clicking on the Settings (gear)
+      icon on your workspace, and selecting "API Tokens." Then enter a name and
+      expiration, and click "Generate API Token."
+
+      You should use GitHub's secrets mechanism to store and pass this.
+    required: true
+  apiUrl:
+    description:
+      The URL to the SI instance's API server. This is optional, and generally
+      points to SI's hosted API service by default.
+
+# Define your outputs here.
+outputs:
+
+runs:
+  using: node20
+  main: ../dist/index.js

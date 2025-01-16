@@ -1,0 +1,56 @@
+name: Set Component Properties
+description: Create a changeset based off of head for a given workspace
+author: jkeiser@systeminit.com
+
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: heart
+  color: red
+
+# Define your inputs here.
+inputs:
+  workspaceId:
+    description: The ID of the workspace containing the component.
+    required: true
+  changeSetId:
+    description: The ID of the changeset containing the component.
+    required: true
+  componentId:
+    description: The ID of the component to modify.
+    required: true
+  domain:
+    description: |
+      A JSON object containing the domain properties to set. For example:
+
+      ```json
+      properties: {
+        "region": "us-east-1",
+        "description": "Hi there",
+        "tags": ["tag1", "tag2"]
+      }
+      ```
+
+      You may specify property keys as names, property IDs, or paths (e.g. { "name/first": "John", "name/last": "Doe" }).
+
+      Each property's value will be replaced with the new value. Properties not specified are left alone.
+    required: true
+  apiToken:
+    description: |
+      The API token. You can create one by going to
+      https://auth.systeminit.com/workspaces/, clicking on the Settings (gear)
+      icon on your workspace, and selecting "API Tokens." Then enter a name and
+      expiration, and click "Generate API Token."
+
+      You should use GitHub's secrets mechanism to store and pass this.
+    required: true
+  apiUrl:
+    description:
+      The URL to the SI instance's API server. This is optional, and generally
+      points to SI's hosted API service by default.
+
+# Define your outputs here.
+outputs:
+
+runs:
+  using: node20
+  main: ../dist/index.js

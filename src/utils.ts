@@ -10,8 +10,6 @@ export function actionRunFunction(
 ) {
   return async () => {
     try {
-      console.log(process.env)
-
       // Run the function with the client and inputs
       const inputs = (options?.inputs ?? []).map((key) => core.getInput(key))
       const client = createSiApiClient()
@@ -41,21 +39,25 @@ export function createSiApiClient() {
   // Log requests
   client.interceptors.request.use((config) => {
     console.log(
-      `Requesting: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`
+      `Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url}`,
+      config.data,
+      '...'
     )
-    if (config.data) console.log('Data:', config.data)
     return config
   })
   client.interceptors.response.use(
     (response) => {
-      console.log('Response:', response)
+      console.log(
+        `Response: ${response.status} ${response.statusText}`,
+        response.data
+      )
       return response
     },
     (err) => {
       if (axios.isAxiosError(err)) {
-        console.log('Error Response: ', err.message, err.response?.data)
+        console.log(`Error: ${err.message}`, err.response?.data)
       } else {
-        console.log('Error:', err)
+        console.log(`Error: ${err}`)
       }
       throw err
     }
@@ -64,7 +66,6 @@ export function createSiApiClient() {
 }
 
 export function setOutputs(outputs: Record<string, string>) {
-  console.log(`Setting outputs: ${outputs}`)
   for (const key in outputs) {
     core.setOutput(key, outputs[key])
   }

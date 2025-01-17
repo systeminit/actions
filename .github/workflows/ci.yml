@@ -57,7 +57,11 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          domain: '{"a":"new A", "c":"new C", "point/x": "new x" }'
+          managementPrototypeId: 01JHRTNR10ZEVRWSWZ1ETSKVCB
+          componentId: 01JH3DZW0QTMH69ZA45299GSWY
+          viewId: 01JATWJV2RA407RZFZBQ9PT5ES
+          apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output
         id: output

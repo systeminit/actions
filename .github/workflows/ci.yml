@@ -55,14 +55,13 @@ jobs:
 
       - name: Test Local Action
         id: test-action
-        uses: ./
+        uses: jkeiser/si-github-action@main
         with:
           domain: '{"a": "new A", "c": "new C", "point/x": "new x"}'
           changeSetName: CI
           managementPrototypeId: 01JHRX9AMGMEFSE5JKXV70AWQG
           componentId: 01JH3DZW0QTMH69ZA45299GSWY
           viewId: 01JATWJV2RA407RZFZBQ9PT5ES
-
           apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output

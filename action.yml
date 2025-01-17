@@ -61,6 +61,11 @@ inputs:
       new one based on HEAD.
     required: false
     default: create
+  changeSetName:
+    description:
+      The name of the changeset to create. This is required if changeSetId is
+      "create".
+    required: false
   apiToken:
     description: |
       The API token. You can create one by going to

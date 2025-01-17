@@ -55,7 +55,7 @@ jobs:
 
       - name: Test Local Action
         id: test-action
-        uses: ./
+        uses: ./trigger
         with:
           changeSetName: CI
           componentId: 01JH3DZW0QTMH69ZA45299GSWY

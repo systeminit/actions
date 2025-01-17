@@ -1,5 +1,5 @@
-name: Set Component Properties
-description: Create a changeset based off of head for a given workspace
+name: Trigger Management Function
+description: Trigger a management function in a new changeset
 author: jkeiser@systeminit.com
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
@@ -100,4 +100,4 @@ outputs:
 
 runs:
   using: node20
-  main: ./dist/index.js
+  main: ../dist/index.js

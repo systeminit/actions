@@ -53662,7 +53662,7 @@ function createSiApiClient() {
         return config;
     });
     client.interceptors.response.use((response) => {
-        coreExports.info(`Response: ${response.status} ${response.statusText}\n${response.data}`);
+        coreExports.info(`Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`);
         coreExports.endGroup();
         return response;
     }, (err) => {
@@ -53711,8 +53711,9 @@ async function run() {
 async function getWorkspaceId(client) {
     let workspaceId = coreExports.getInput('workspaceId');
     if (!workspaceId) {
-        coreExports.info('Getting workspaceId from token ...');
+        coreExports.startGroup('Getting workspaceId from token ...');
         workspaceId = (await client.get(`/api/whoami`)).data.workspaceId;
+        coreExports.endGroup();
     }
     coreExports.setOutput('workspaceId', workspaceId);
     return workspaceId;
@@ -53723,11 +53724,12 @@ async function getChangeSet(client, workspaceId) {
     let changeSetId = coreExports.getInput('changeSetId');
     let createdChangeSet = false;
     if (changeSetId === 'create') {
-        coreExports.info('Creating change set ...');
+        coreExports.startGroup('Creating change set ...');
         const changeSetName = coreExports.getInput('changeSetName');
         changeSetId = (await client.post(changeSetsUrl, { changeSetName })).data
             .changeSet.id;
         createdChangeSet = true;
+        coreExports.endGroup();
     }
     coreExports.setOutput('changeSetId', changeSetId);
     const changeSetWebUrl = `${getWebUrl()}/w/${workspaceId}/${changeSetId}/c}`;
@@ -53740,7 +53742,7 @@ async function getChangeSet(client, workspaceId) {
     };
 }
 async function setComponentProperties(client, { changeSetWebUrl, changeSetUrl }) {
-    coreExports.info('Setting component properties ...');
+    coreExports.startGroup('Setting component properties ...');
     // Get workspaceId from input or from whoami if there is no input
     const componentId = coreExports.getInput('componentId');
     const domain = YAML.parse(coreExports.getInput('domain'));
@@ -53748,14 +53750,16 @@ async function setComponentProperties(client, { changeSetWebUrl, changeSetUrl })
         domain
     });
     coreExports.setOutput('componentWebUrl', `${changeSetWebUrl}?s=c_${componentId}&t=attributes`);
+    coreExports.endGroup();
 }
 async function triggerManagementFunction(client, { changeSetUrl }) {
-    coreExports.info('Triggering management function ...');
+    coreExports.startGroup('Triggering management function ...');
     const managementPrototypeId = coreExports.getInput('managementPrototypeId');
     const componentId = coreExports.getInput('componentId');
     const viewId = coreExports.getInput('viewId');
     const { data: { message } } = await client.post(`${changeSetUrl}/management/prototype/${managementPrototypeId}/${componentId}/${viewId}`, {});
     coreExports.setOutput('managementFunctionLogs', message);
+    coreExports.endGroup();
 }
 
 run();

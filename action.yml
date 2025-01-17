@@ -79,11 +79,24 @@ inputs:
     description:
       The URL to the SI instance's API server. This is optional, and generally
       points to SI's hosted API service by default.
+  webUrl:
+    description:
+      The URL to the SI instance's web server. This defaults to the same as
+      apiUrl. Generally only used for local development where the servers may be
+      running on different ports.
 
 # Define your outputs here.
 outputs:
+  managementFunctionLogs:
+    description: The logs from the management function.
+  workspaceId:
+    description: The ID of the workspace containing the component.
   changeSetId:
     description: The ID of the changeset created.
+  changeSetWebUrl:
+    description: The web URL to the changeset.
+  componentWebUrl:
+    description: The web URL to the component.
 
 runs:
   using: node20

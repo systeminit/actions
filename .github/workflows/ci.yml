@@ -59,11 +59,14 @@ jobs:
         with:
           changeSetName: CI
           componentId: 01JH3DZW0QTMH69ZA45299GSWY
-          domain: '{"a": "new A", "c": "new C", "point/x": "new x"}'
+          domain: |
+            a: new A
+            c: new C
+            point/x: new x
           managementPrototypeId: 01JHRX9AMGMEFSE5JKXV70AWQG
           viewId: 01JATWJV2RA407RZFZBQ9PT5ES
           apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output
         id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+        run: echo "${{ steps.test-action.outputs.managementFunctionLogs }}"

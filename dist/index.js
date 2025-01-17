@@ -53657,7 +53657,7 @@ function createSiApiClient() {
     client.interceptors.request.use((config) => {
         coreExports.info(`Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`);
         if (config.data)
-            coreExports.info(`Payload: config.data`);
+            coreExports.info(`Payload: ${JSON.stringify(config.data)}`);
         return config;
     });
     client.interceptors.response.use((response) => {

@@ -15,7 +15,7 @@ export function createSiApiClient() {
     core.info(
       `Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`
     )
-    if (config.data) core.info(`Payload: config.data`)
+    if (config.data) core.info(`Payload: ${JSON.stringify(config.data)}`)
     return config
   })
   client.interceptors.response.use(

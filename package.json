@@ -39,6 +39,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/http-client": "^2.2.3",
+    "@rollup/plugin-json": "^6.1.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {

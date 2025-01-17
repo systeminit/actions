@@ -22,7 +22,7 @@ export function createSiApiClient() {
   client.interceptors.response.use(
     (response) => {
       core.info(
-        `Response: ${response.status} ${response.statusText}\n${response.data}`
+        `Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`
       )
       core.endGroup()
       return response

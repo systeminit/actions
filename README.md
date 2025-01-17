@@ -1,6 +1,6 @@
 # System Initiative GitHub Actions
 
-Use System Initiative workspaces in your github workflows!
+Use System Initiative workspaces in your GitHub workflows!
 
 NOTE: this is in early private access, and not yet publicly available.
 
@@ -31,7 +31,7 @@ so you can deploy real infrastructure based on your changes.
 The `with` section is where you put the input properties that tell SI what to
 run and what properties to set:
 
-- `apiToken` is the API token you use to access SI from github actions (see
+- `apiToken` is the API token you use to access SI from GitHub Actions (see
   [Getting an API Token](#getting-an-api-token)). We recommend using a secret
   here, like `apiToken: ${{ secrets.SI_API_TOKEN }}`.
 - `changeSetName` is the name of the change set to create when the action runs.
@@ -58,7 +58,8 @@ run and what properties to set:
 
 To use these actions, you will need an API token. To get one:
 
-1. Go to [https://auth.systeminit.com/workspaces](https://auth.systeminit.com/workspaces).
+1. Go to
+   [https://auth.systeminit.com/workspaces](https://auth.systeminit.com/workspaces).
 2. Click on the Gear icon in the workspace you'd like to use with System
    Initiative, and click API Tokens. ![alt text](docs/api-tokens.png)
 3. Create an API token: fill in the name and how long before the token will
@@ -67,7 +68,7 @@ To use these actions, you will need an API token. To get one:
    paste it wherever you like. ![alt text](docs/created-token.png)
 
 We recommend placing the secret into a
-[github secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)
+[GitHub secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)
 so you can access it in workflows with `{{ secrets.SI_API_TOKEN }}` (though you
 can name it whatever you like)! The examples on this page all assume you have
 placed it into a repository secret named SI_API_TOKEN.

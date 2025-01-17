@@ -9,18 +9,17 @@ branding:
 
 # Define your inputs here.
 inputs:
-  workspaceId:
-    description: The ID of the workspace containing the component.
-    required: true
-  changeSetId:
-    description: The ID of the changeset containing the component.
-    required: true
   componentId:
-    description: The ID of the component to modify.
+    description: The ID of the component to run the management function on.
+    required: true
+  managementPrototypeId:
+    description: The ID of the management function prototype to run.
     required: true
   domain:
     description: |
-      A JSON object containing the domain properties to set. For example:
+      A JSON object containing the domain properties to set for the management function component.
+
+      For example:
 
       ```json
       properties: {
@@ -34,6 +33,34 @@ inputs:
 
       Each property's value will be replaced with the new value. Properties not specified are left alone.
     required: true
+  viewId:
+    description: The ID of the view containing the component.
+    required: true
+
+  apply_on_success:
+    description:
+      Whether to apply the change set to main after triggering the management
+      function.
+    required: false
+    default: true
+  abandon_on_failure:
+    description:
+      Whether to abandon the created changeset if triggering the management
+      function fails.
+    required: false
+    default: false
+
+  workspaceId:
+    description:
+      The ID of the workspace containing the component. By default, this will be
+      set to the workspace ID you grabbed the token for.
+    required: false
+  changeSetId:
+    description:
+      The ID of the changeset containing the component, or "create" to create a
+      new one based on HEAD.
+    required: false
+    default: create
   apiToken:
     description: |
       The API token. You can create one by going to

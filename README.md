@@ -1,4 +1,4 @@
-# System Initiative Github Actions
+# System Initiative GitHub Actions
 
 Use System Initiative workspaces in your github workflows!
 
@@ -58,7 +58,7 @@ run and what properties to set:
 
 To use these actions, you will need an API token. To get one:
 
-1. Go to https://auth.systeminit.com/workspaces.
+1. Go to [https://auth.systeminit.com/workspaces](https://auth.systeminit.com/workspaces).
 2. Click on the Gear icon in the workspace you'd like to use with System
    Initiative, and click API Tokens. ![alt text](docs/api-tokens.png)
 3. Create an API token: fill in the name and how long before the token will

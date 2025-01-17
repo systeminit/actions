@@ -77,6 +77,8 @@ inputs:
 
 # Define your outputs here.
 outputs:
+  changeSetId:
+    description: The ID of the changeset created.
 
 runs:
   using: node20

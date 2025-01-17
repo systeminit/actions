@@ -12,7 +12,6 @@ export function createSiApiClient() {
   })
   // Log requests
   client.interceptors.request.use((config) => {
-    core.startGroup(`${config.method?.toUpperCase() ?? 'GET'} ${config.url}`)
     core.info(
       `Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`
     )
@@ -24,21 +23,16 @@ export function createSiApiClient() {
       core.info(
         `Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`
       )
-      core.endGroup()
       return response
     },
     (err) => {
       // Log errors and end the group for this request
-      try {
-        if (axios.isAxiosError(err)) {
-          core.error(`${err.message}\n${err.response?.data}`)
-        } else {
-          core.error(err)
-        }
-        throw err
-      } finally {
-        core.endGroup()
+      if (axios.isAxiosError(err)) {
+        core.error(`${err.message}\n${err.response?.data}`)
+      } else {
+        core.error(err)
       }
+      throw err
     }
   )
   return client

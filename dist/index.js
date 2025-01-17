@@ -53655,7 +53655,6 @@ function createSiApiClient() {
     });
     // Log requests
     client.interceptors.request.use((config) => {
-        coreExports.startGroup(`${config.method?.toUpperCase() ?? 'GET'} ${config.url}`);
         coreExports.info(`Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`);
         if (config.data)
             coreExports.info(`Payload: config.data`);
@@ -53663,22 +53662,16 @@ function createSiApiClient() {
     });
     client.interceptors.response.use((response) => {
         coreExports.info(`Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`);
-        coreExports.endGroup();
         return response;
     }, (err) => {
         // Log errors and end the group for this request
-        try {
-            if (axios.isAxiosError(err)) {
-                coreExports.error(`${err.message}\n${err.response?.data}`);
-            }
-            else {
-                coreExports.error(err);
-            }
-            throw err;
+        if (axios.isAxiosError(err)) {
+            coreExports.error(`${err.message}\n${err.response?.data}`);
         }
-        finally {
-            coreExports.endGroup();
+        else {
+            coreExports.error(err);
         }
+        throw err;
     });
     return client;
 }

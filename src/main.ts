@@ -19,8 +19,9 @@ export async function run() {
 async function getWorkspaceId(client: AxiosInstance) {
   let workspaceId = core.getInput('workspaceId')
   if (!workspaceId) {
-    core.info('Getting workspaceId from token ...')
+    core.startGroup('Getting workspaceId from token ...')
     workspaceId = (await client.get(`/api/whoami`)).data.workspaceId
+    core.endGroup()
   }
   core.setOutput('workspaceId', workspaceId)
   return workspaceId
@@ -33,11 +34,12 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
   let changeSetId = core.getInput('changeSetId')
   let createdChangeSet = false
   if (changeSetId === 'create') {
-    core.info('Creating change set ...')
+    core.startGroup('Creating change set ...')
     const changeSetName = core.getInput('changeSetName')
     changeSetId = (await client.post(changeSetsUrl, { changeSetName })).data
       .changeSet.id
     createdChangeSet = true
+    core.endGroup()
   }
 
   core.setOutput('changeSetId', changeSetId)
@@ -57,7 +59,7 @@ async function setComponentProperties(
   client: AxiosInstance,
   { changeSetWebUrl, changeSetUrl }: ChangeSet
 ) {
-  core.info('Setting component properties ...')
+  core.startGroup('Setting component properties ...')
   // Get workspaceId from input or from whoami if there is no input
   const componentId = core.getInput('componentId')
   const domain = YAML.parse(core.getInput('domain'))
@@ -68,13 +70,14 @@ async function setComponentProperties(
     'componentWebUrl',
     `${changeSetWebUrl}?s=c_${componentId}&t=attributes`
   )
+  core.endGroup()
 }
 
 async function triggerManagementFunction(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  core.info('Triggering management function ...')
+  core.startGroup('Triggering management function ...')
   const managementPrototypeId = core.getInput('managementPrototypeId')
   const componentId = core.getInput('componentId')
   const viewId = core.getInput('viewId')
@@ -85,4 +88,5 @@ async function triggerManagementFunction(
     {}
   )
   core.setOutput('managementFunctionLogs', message)
+  core.endGroup()
 }

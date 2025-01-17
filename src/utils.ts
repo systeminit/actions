@@ -13,7 +13,7 @@ export function createSiApiClient() {
   // Log requests
   client.interceptors.request.use((config) => {
     core.info(
-      `Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`
+      `Sending ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ${config.data ? JSON.stringify(config.data, null, 2) : ''}`
     )
     if (config.data)
       core.info(`Payload: ${JSON.stringify(config.data, null, 2)}`)
@@ -22,7 +22,7 @@ export function createSiApiClient() {
   client.interceptors.response.use(
     (response) => {
       core.info(
-        `Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data, null, 2)}`
+        `Response: ${response.status} ${response.statusText} ${JSON.stringify(response.data, null, 2)}`
       )
       return response
     },

@@ -53657,11 +53657,11 @@ function createSiApiClient() {
     client.interceptors.request.use((config) => {
         coreExports.info(`Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`);
         if (config.data)
-            coreExports.info(`Payload: ${JSON.stringify(config.data)}`);
+            coreExports.info(`Payload: ${JSON.stringify(config.data, null, 2)}`);
         return config;
     });
     client.interceptors.response.use((response) => {
-        coreExports.info(`Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`);
+        coreExports.info(`Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data, null, 2)}`);
         return response;
     }, (err) => {
         // Log errors and end the group for this request

@@ -15,13 +15,14 @@ export function createSiApiClient() {
     core.info(
       `Request: ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ...`
     )
-    if (config.data) core.info(`Payload: ${JSON.stringify(config.data)}`)
+    if (config.data)
+      core.info(`Payload: ${JSON.stringify(config.data, null, 2)}`)
     return config
   })
   client.interceptors.response.use(
     (response) => {
       core.info(
-        `Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data)}`
+        `Response: ${response.status} ${response.statusText}\n${JSON.stringify(response.data, null, 2)}`
       )
       return response
     },

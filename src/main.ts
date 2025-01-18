@@ -10,6 +10,9 @@ export async function run() {
     const changeSet = await getChangeSet(client, workspaceId)
     await setComponentProperties(client, changeSet)
     await triggerManagementFunction(client, changeSet)
+    if (await applyChangeSet(client, changeSet)) {
+      await waitForChangeSet(client, changeSet)
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -89,4 +92,104 @@ async function triggerManagementFunction(
   )
   core.setOutput('managementFunctionLogs', message)
   core.endGroup()
+}
+
+async function applyChangeSet(
+  client: AxiosInstance,
+  { changeSetUrl }: ChangeSet
+) {
+  core.startGroup('Applying change set ...')
+  const applyOnSuccess = core.getInput('applyOnSuccess')
+  if (applyOnSuccess) {
+    console.log(applyOnSuccess)
+    if (applyOnSuccess === 'force') {
+      await client.post(`${changeSetUrl}/force_apply`)
+    } else {
+      await client.post(`${changeSetUrl}/request_approval`)
+    }
+  }
+  core.endGroup()
+  return applyOnSuccess && applyOnSuccess !== 'false'
+}
+
+async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
+  core.startGroup('Waiting for change set to complete ...')
+  while (!(await checkChangeSetStatus(client, changeSet))) {
+    await new Promise((resolve) => setTimeout(resolve, 10000))
+  }
+  core.info('Change set is complete!')
+  core.endGroup()
+}
+
+async function checkChangeSetStatus(
+  client: AxiosInstance,
+  { changeSetUrl }: ChangeSet
+) {
+  const {
+    data: { changeSet, actions }
+  } = await client.get(`${changeSetUrl}/merge_status`)
+  switch (changeSet.status) {
+    /* eslint-disable no-fallthrough */
+
+    /// Planned to be abandoned but needs approval first
+    /// todo(brit): Remove once rebac is done
+    case 'NeedsAbandonApproval':
+    /// Planned to be applied but needs approval first
+    case 'NeedsApproval':
+    /// Approved by relevant parties and ready to be applied
+    case 'Approved':
+      // Waiting
+      return false
+
+    /// Applied this changeset to its parent
+    case 'Applied':
+      // If there are no actions left to do, we're done!
+      if (actions.length === 0) {
+        return true
+      }
+
+      // Check for failure
+      for (const action of actions) {
+        switch (action.status) {
+          /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
+          /// removed from the graph.
+          case 'Queued':
+          /// Action has been dispatched, and started execution in the job system. See the job history
+          /// for details.
+          case 'Running':
+          /// Action is "queued", but should not be considered as eligible to run, until moved to the
+          /// `Queued` state.
+          case 'OnHold':
+          /// Action has been determined to be eligible to run, and has had its job sent to the job
+          /// queue.
+          case 'Dispatched':
+            // Waiting
+            break
+
+          /// Action failed during execution. See the job history for details.
+          case 'Failed':
+            // Failure
+            throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`)
+
+          default:
+            throw new Error(`Unknown action status: ${action.status}`)
+        }
+      }
+      // Some jobs are still unfinished! Waiting.
+      return true
+
+    /// No longer usable
+    case 'Abandoned':
+    /// Migration of Workspace Snapshot for this change set failed
+    case 'Failed':
+    /// Request to apply was rejected
+    case 'Rejected':
+    /// Available for user's to modify
+    case 'Open':
+      // Can't make progress on these cases
+      throw new Error(`Change set status is ${changeSet.status}`)
+
+    default:
+      throw new Error(`Unknown change set status: ${changeSet.status}`)
+  }
 }

@@ -37,13 +37,14 @@ inputs:
     description: The ID of the view containing the component.
     required: true
 
-  apply_on_success:
+  applyOnSuccess:
     description:
       Whether to apply the change set to main after triggering the management
-      function.
+      function. Set to "force" to force apply (if your user has permission to do
+      so).
     required: false
-    default: true
-  abandon_on_failure:
+    default: false # Temporarily false until we've propagated API endpoints all the way up
+  abandonOnFailure:
     description:
       Whether to abandon the created changeset if triggering the management
       function fails.

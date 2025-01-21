@@ -58,10 +58,10 @@ jobs:
         uses: ./trigger # jkeiser/si-github-action/trigger@main
         with:
           changeSetName: CI
-          componentId: 01JJ4TXDWKWX230NVYQTM51E3N
+          componentId: 01JJ4TXDYTKY91R04ET8GCM675
           domain: |
             Region: us-east-1
-          managementPrototypeId: 01JJ4TXDYTKY91R04ET8GCM675
+          managementPrototypeId: 01JJ4TXDWKWX230NVYQTM51E3N
           viewId: 01JATWJV2RA407RZFZBQ9PT5ES
           apiToken: ${{ secrets.SI_API_TOKEN }}
       - name: Print Output

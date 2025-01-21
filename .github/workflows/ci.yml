@@ -55,12 +55,13 @@ jobs:
 
       - name: Test Local Action
         id: test-action
-        uses: ./trigger # jkeiser/si-github-action/trigger@main
+        uses: systeminit/actions/trigger@main
         with:
-          changeSetName: CI
+          changeSetName: Testing
           componentId: 01JJ4TXDYTKY91R04ET8GCM675
           domain: |
             Region: us-east-1
+            BaseCidrBlock: 10.0.0.0/12
           managementPrototypeId: 01JJ4TXDWKWX230NVYQTM51E3N
           viewId: 01JATWJV2RA407RZFZBQ9PT5ES
           apiToken: ${{ secrets.SI_API_TOKEN }}

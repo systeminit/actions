@@ -12,8 +12,10 @@ so you can deploy real infrastructure based on your changes.
 
 ### Usage
 
+Place this in a `.github/workflows` workflow on your repository:
+
 ```yaml
-- uses: ./trigger # jkeiser/si-github-action/trigger@main
+- uses: jkeiser/si-github-action/trigger@main
   with:
     changeSetName: CI
     componentId: 01JH3DZW0QTMH69ZA45299GSWY

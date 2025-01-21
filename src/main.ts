@@ -10,9 +10,9 @@ export async function run() {
     const changeSet = await getChangeSet(client, workspaceId)
     await setComponentProperties(client, changeSet)
     await triggerManagementFunction(client, changeSet)
-    if (await applyChangeSet(client, changeSet)) {
-      await waitForChangeSet(client, changeSet)
-    }
+    // if (await applyChangeSet(client, changeSet)) {
+    //   await waitForChangeSet(client, changeSet)
+    // }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -94,32 +94,32 @@ async function triggerManagementFunction(
   core.endGroup()
 }
 
-async function applyChangeSet(
-  client: AxiosInstance,
-  { changeSetUrl }: ChangeSet
-) {
-  const applyOnSuccess =
-    core.getBooleanInput('applyOnSuccess') && core.getInput('applyOnSuccess')
-  if (!applyOnSuccess) return false;
-  core.startGroup('Applying change set ...')
-  console.log(applyOnSuccess)
-  if (applyOnSuccess === 'force') {
-    await client.post(`${changeSetUrl}/force_apply`)
-  } else {
-    await client.post(`${changeSetUrl}/request_approval`)
-  }
-  core.endGroup()
-  return true
-}
+// async function applyChangeSet(
+//   client: AxiosInstance,
+//   { changeSetUrl }: ChangeSet
+// ) {
+//   const applyOnSuccess =
+//     core.getBooleanInput('applyOnSuccess') && core.getInput('applyOnSuccess')
+//   if (!applyOnSuccess) return false
+//   core.startGroup('Applying change set ...')
+//   console.log(applyOnSuccess)
+//   if (applyOnSuccess === 'force') {
+//     await client.post(`${changeSetUrl}/force_apply`)
+//   } else {
+//     await client.post(`${changeSetUrl}/request_approval`)
+//   }
+//   core.endGroup()
+//   return true
+// }
 
-async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
-  core.startGroup('Waiting for change set to complete ...')
-  while (!(await checkChangeSetStatus(client, changeSet))) {
-    await new Promise((resolve) => setTimeout(resolve, 10000))
-  }
-  core.info('Change set is complete!')
-  core.endGroup()
-}
+// async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
+//   core.startGroup('Waiting for change set to complete ...')
+//   while (!(await checkChangeSetStatus(client, changeSet))) {
+//     await new Promise((resolve) => setTimeout(resolve, 10000))
+//   }
+//   core.info('Change set is complete!')
+//   core.endGroup()
+// }
 
 async function checkChangeSetStatus(
   client: AxiosInstance,

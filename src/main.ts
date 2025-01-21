@@ -98,18 +98,17 @@ async function applyChangeSet(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  core.startGroup('Applying change set ...')
   const applyOnSuccess = core.getInput('applyOnSuccess')
-  if (applyOnSuccess) {
-    console.log(applyOnSuccess)
-    if (applyOnSuccess === 'force') {
-      await client.post(`${changeSetUrl}/force_apply`)
-    } else {
-      await client.post(`${changeSetUrl}/request_approval`)
-    }
+  if (!applyOnSuccess || applyOnSuccess === 'false') return false;
+  core.startGroup('Applying change set ...')
+  console.log(applyOnSuccess)
+  if (applyOnSuccess === 'force') {
+    await client.post(`${changeSetUrl}/force_apply`)
+  } else {
+    await client.post(`${changeSetUrl}/request_approval`)
   }
   core.endGroup()
-  return applyOnSuccess && applyOnSuccess !== 'false'
+  return true
 }
 
 async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {

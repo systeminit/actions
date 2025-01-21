@@ -98,8 +98,9 @@ async function applyChangeSet(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  const applyOnSuccess = core.getInput('applyOnSuccess')
-  if (!applyOnSuccess || applyOnSuccess === 'false') return false;
+  const applyOnSuccess =
+    core.getBooleanInput('applyOnSuccess') && core.getInput('applyOnSuccess')
+  if (!applyOnSuccess) return false;
   core.startGroup('Applying change set ...')
   console.log(applyOnSuccess)
   if (applyOnSuccess === 'force') {

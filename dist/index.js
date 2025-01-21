@@ -53758,19 +53758,19 @@ async function triggerManagementFunction(client, { changeSetUrl }) {
     coreExports.endGroup();
 }
 async function applyChangeSet(client, { changeSetUrl }) {
+    const applyOnSuccess = coreExports.getBooleanInput('applyOnSuccess') && coreExports.getInput('applyOnSuccess');
+    if (!applyOnSuccess)
+        return false;
     coreExports.startGroup('Applying change set ...');
-    const applyOnSuccess = coreExports.getInput('applyOnSuccess');
-    if (applyOnSuccess) {
-        console.log(applyOnSuccess);
-        if (applyOnSuccess === 'force') {
-            await client.post(`${changeSetUrl}/force_apply`);
-        }
-        else {
-            await client.post(`${changeSetUrl}/request_approval`);
-        }
+    console.log(applyOnSuccess);
+    if (applyOnSuccess === 'force') {
+        await client.post(`${changeSetUrl}/force_apply`);
+    }
+    else {
+        await client.post(`${changeSetUrl}/request_approval`);
     }
     coreExports.endGroup();
-    return applyOnSuccess && applyOnSuccess !== 'false';
+    return true;
 }
 async function waitForChangeSet(client, changeSet) {
     coreExports.startGroup('Waiting for change set to complete ...');

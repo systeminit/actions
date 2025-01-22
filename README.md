@@ -15,7 +15,7 @@ so you can deploy real infrastructure based on your changes.
 Place this in a `.github/workflows` workflow on your repository:
 
 ```yaml
-- uses: jkeiser/si-github-action/trigger@main
+- uses: systeminit/actions/trigger@main
   with:
     changeSetName: CI
     componentId: 01JH3DZW0QTMH69ZA45299GSWY
@@ -23,8 +23,6 @@ Place this in a `.github/workflows` workflow on your repository:
       a: new A
       c: new C
       point/x: new x
-    managementPrototypeId: 01JHRX9AMGMEFSE5JKXV70AWQG
-    viewId: 01JATWJV2RA407RZFZBQ9PT5ES
     apiToken: ${{ secrets.SI_API_TOKEN }}
 ```
 
@@ -51,10 +49,6 @@ run and what properties to set:
 
   You may specify this as either YAML or JSON. (The `|` after `domain:` is
   important, as it must be passed in as a string!)
-
-- `viewId` is the ID of the view containing the management component.
-- `managementPrototypeId` is the ID of the management function attached to the
-  component.
 
 ## Getting an API Token
 

@@ -53752,12 +53752,51 @@ async function setComponentProperties(client, { changeSetWebUrl, changeSetUrl })
 }
 async function triggerManagementFunction(client, { changeSetUrl }) {
     coreExports.startGroup('Triggering management function ...');
-    const managementPrototypeId = coreExports.getInput('managementPrototypeId');
-    const componentId = coreExports.getInput('componentId');
-    const viewId = coreExports.getInput('viewId');
+    const { componentId, managementPrototypeId, viewId } = await getInputs();
     const { data: { message } } = await client.post(`${changeSetUrl}/management/prototype/${managementPrototypeId}/${componentId}/${viewId}`, {});
     coreExports.setOutput('managementFunctionLogs', message);
     coreExports.endGroup();
+    // Look up viewId and managementPrototypeId from component
+    async function getInputs() {
+        const componentId = coreExports.getInput('componentId');
+        let viewId = coreExports.getInput('viewId');
+        let managementPrototypeId = coreExports.getInput('managementPrototypeId');
+        console.log('Inferring viewId and managementPrototypeId ...');
+        const data = (await client.get(`${changeSetUrl}/components/${componentId}`))
+            .data;
+        const componentName = data.component.displayName;
+        // Pick the only view (possibly by name) if not specified
+        if (!viewId) {
+            // If "view" name was specified, narrow down the list.
+            const view = coreExports.getInput('view');
+            const matchingViews = view
+                ? data.viewData.filter((v) => v.name === view)
+                : data.viewData;
+            const suffix = view ? ` named "${view}"` : '';
+            // Pick the single match (and error if there is not a single match)
+            if (matchingViews.length > 1)
+                throw new Error(`Component ${componentName} has multiple views${suffix}--pick which one to run in using the "view" or "viewId" parameters.\n${data.viewData}`);
+            viewId = matchingViews[0]?.viewId;
+            if (!viewId)
+                throw new Error(`Component ${componentName} has no views${suffix}`);
+        }
+        // Pick the only management function (possibly by name) if not specified
+        if (!managementPrototypeId) {
+            // If "managementFunction" name was specified, narrow down the list
+            const managementFunction = coreExports.getInput('managementFunction');
+            const matchingFunctions = managementFunction
+                ? data.managementFunctions.filter((f) => f.name === managementFunction)
+                : data.managementFunctions;
+            const suffix = managementFunction ? ` named "${managementFunction}"` : '';
+            // Pick the single match (and error if there is not a single match)
+            if (matchingFunctions.length > 1)
+                throw new Error(`Component ${componentName} has multiple management functions${suffix}--pick which one to run using the "managementFunction" or "managementPrototypeId" parameters.\n${data.managementFunctions}`);
+            managementPrototypeId = matchingFunctions[0]?.managementPrototypeId;
+            if (!managementPrototypeId)
+                throw new Error(`Component ${componentName} has no management functions${suffix}`);
+        }
+        return { componentId, viewId, managementPrototypeId };
+    }
 }
 async function applyChangeSet(client, { changeSetUrl }) {
     const applyOnSuccess = coreExports.getInput('applyOnSuccess') === 'force'
@@ -53789,7 +53828,7 @@ async function applyChangeSet(client, { changeSetUrl }) {
         await client.post(`${changeSetUrl}/request_approval`);
     }
     coreExports.endGroup();
-    return true;
+    return !!applyOnSuccess;
 }
 async function waitForChangeSet(client, changeSet) {
     coreExports.startGroup('Waiting for change set to complete ...');
@@ -53820,7 +53859,6 @@ async function checkChangeSetStatus(client, { changeSetUrl }) {
             return false; // Waiting for approval/apply
         /// Applied this changeset to its parent
         case 'Applied': {
-            // If there are no actions left to do, we're done!
             if (!waitForActions) {
                 coreExports.info('Not waiting for actions');
                 return true;

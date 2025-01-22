@@ -81,9 +81,9 @@ async function triggerManagementFunction(
   { changeSetUrl }: ChangeSet
 ) {
   core.startGroup('Triggering management function ...')
-  const managementPrototypeId = core.getInput('managementPrototypeId')
-  const componentId = core.getInput('componentId')
-  const viewId = core.getInput('viewId')
+
+  const { componentId, managementPrototypeId, viewId } = await getInputs()
+
   const {
     data: { message }
   } = await client.post(
@@ -91,7 +91,70 @@ async function triggerManagementFunction(
     {}
   )
   core.setOutput('managementFunctionLogs', message)
+
   core.endGroup()
+
+  // Look up viewId and managementPrototypeId from component
+  async function getInputs() {
+    const componentId = core.getInput('componentId')
+    let viewId = core.getInput('viewId')
+    let managementPrototypeId = core.getInput('managementPrototypeId')
+
+    console.log('Inferring viewId and managementPrototypeId ...')
+    const data = (await client.get(`${changeSetUrl}/components/${componentId}`))
+      .data as {
+      component: { displayName: string }
+      viewData: { viewId: string; name: string }[]
+      managementFunctions: {
+        managementPrototypeId: string
+        name: string
+      }[]
+    }
+
+    const componentName = data.component.displayName
+
+    // Pick the only view (possibly by name) if not specified
+    if (!viewId) {
+      // If "view" name was specified, narrow down the list.
+      const view = core.getInput('view')
+      const matchingViews = view
+        ? data.viewData.filter((v) => v.name === view)
+        : data.viewData
+      const suffix = view ? ` named "${view}"` : ''
+
+      // Pick the single match (and error if there is not a single match)
+      if (matchingViews.length > 1)
+        throw new Error(
+          `Component ${componentName} has multiple views${suffix}--pick which one to run in using the "view" or "viewId" parameters.\n${data.viewData}`
+        )
+      viewId = matchingViews[0]?.viewId
+      if (!viewId)
+        throw new Error(`Component ${componentName} has no views${suffix}`)
+    }
+
+    // Pick the only management function (possibly by name) if not specified
+    if (!managementPrototypeId) {
+      // If "managementFunction" name was specified, narrow down the list
+      const managementFunction = core.getInput('managementFunction')
+      const matchingFunctions = managementFunction
+        ? data.managementFunctions.filter((f) => f.name === managementFunction)
+        : data.managementFunctions
+      const suffix = managementFunction ? ` named "${managementFunction}"` : ''
+
+      // Pick the single match (and error if there is not a single match)
+      if (matchingFunctions.length > 1)
+        throw new Error(
+          `Component ${componentName} has multiple management functions${suffix}--pick which one to run using the "managementFunction" or "managementPrototypeId" parameters.\n${data.managementFunctions}`
+        )
+      managementPrototypeId = matchingFunctions[0]?.managementPrototypeId
+      if (!managementPrototypeId)
+        throw new Error(
+          `Component ${componentName} has no management functions${suffix}`
+        )
+    }
+
+    return { componentId, viewId, managementPrototypeId }
+  }
 }
 
 async function applyChangeSet(
@@ -127,7 +190,7 @@ async function applyChangeSet(
     await client.post(`${changeSetUrl}/request_approval`)
   }
   core.endGroup()
-  return true
+  return !!applyOnSuccess
 }
 
 async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {

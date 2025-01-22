@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import YAML from 'yaml'
 import { AxiosInstance } from 'axios'
-import { createSiApiClient, getWebUrl } from '../src/utils.js'
+import { createSiApiClient, getWebUrl, sleep } from '../src/utils.js'
 
 export async function run() {
   try {
@@ -14,7 +14,7 @@ export async function run() {
       await waitForChangeSet(client, changeSet)
     }
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    core.setFailed(error as string | Error)
   }
 }
 
@@ -99,10 +99,12 @@ async function applyChangeSet(
   { changeSetUrl }: ChangeSet
 ) {
   const applyOnSuccess =
-    core.getBooleanInput('applyOnSuccess') && core.getInput('applyOnSuccess')
+    core.getInput('applyOnSuccess') === 'force'
+      ? 'force'
+      : core.getBooleanInput('applyOnSuccess')
+
   if (!applyOnSuccess) return false
   core.startGroup('Applying change set ...')
-  console.log(applyOnSuccess)
   if (applyOnSuccess === 'force') {
     await client.post(`${changeSetUrl}/force_apply`)
   } else {
@@ -114,8 +116,10 @@ async function applyChangeSet(
 
 async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
   core.startGroup('Waiting for change set to complete ...')
+  const statusPollIntervalMs =
+    Number(core.getInput('statusPollIntervalSeconds')) * 1000
   while (!(await checkChangeSetStatus(client, changeSet))) {
-    await new Promise((resolve) => setTimeout(resolve, 10000))
+    await sleep(statusPollIntervalMs)
   }
   core.info('Change set is complete!')
   core.endGroup()
@@ -125,9 +129,12 @@ async function checkChangeSetStatus(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  const {
-    data: { changeSet, actions }
-  } = await client.get(`${changeSetUrl}/merge_status`)
+  const { changeSet, actions } = (
+    await client.get(`${changeSetUrl}/merge_status`)
+  ).data as {
+    changeSet: { status: string }
+    actions: { state: string }[]
+  }
   switch (changeSet.status) {
     /* eslint-disable no-fallthrough */
 
@@ -144,13 +151,11 @@ async function checkChangeSetStatus(
     /// Applied this changeset to its parent
     case 'Applied':
       // If there are no actions left to do, we're done!
-      if (actions.length === 0) {
-        return true
-      }
+      if (actions.length === 0) return true
 
       // Check for failure
       for (const action of actions) {
-        switch (action.status) {
+        switch (action.state) {
           /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
           /// removed from the graph.
           case 'Queued':
@@ -172,7 +177,7 @@ async function checkChangeSetStatus(
             throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`)
 
           default:
-            throw new Error(`Unknown action status: ${action.status}`)
+            throw new Error(`Unknown action status: ${action.state}`)
         }
       }
       // Some jobs are still unfinished! Waiting.

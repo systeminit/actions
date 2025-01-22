@@ -52,3 +52,7 @@ export function getApiUrl() {
 export function getWebUrl() {
   return core.getInput('webUrl') || getApiUrl()
 }
+
+export async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}

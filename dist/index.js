@@ -53699,8 +53699,7 @@ async function run() {
         }
     }
     catch (error) {
-        if (error instanceof Error)
-            coreExports.setFailed(error.message);
+        coreExports.setFailed(error);
     }
 }
 // Get workspaceId from input (or from token if not specified)
@@ -53758,9 +53757,18 @@ async function triggerManagementFunction(client, { changeSetUrl }) {
     coreExports.endGroup();
 }
 async function applyChangeSet(client, { changeSetUrl }) {
-    const applyOnSuccess = coreExports.getBooleanInput('applyOnSuccess') && coreExports.getInput('applyOnSuccess');
+    console.log('applyChangeSet A');
+    let applyOnSuccess = coreExports.getInput('applyOnSuccess');
+    console.log('applyChangeSet A1');
+    if (applyOnSuccess !== 'force') {
+        console.log('applyChangeSet A2');
+        applyOnSuccess = coreExports.getBooleanInput('applyOnSuccess');
+        console.log(typeof applyOnSuccess, applyOnSuccess);
+    }
+    console.log('applyChangeSet B');
     if (!applyOnSuccess)
         return false;
+    console.log('applyChangeSet C');
     coreExports.startGroup('Applying change set ...');
     console.log(applyOnSuccess);
     if (applyOnSuccess === 'force') {

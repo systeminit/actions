@@ -42,14 +42,23 @@ inputs:
       Whether to apply the change set to main after triggering the management
       function. Set to "force" to force apply (if your user has permission to do
       so).
-    required: false
-    default: false # Temporarily false until we've propagated API endpoints all the way up
+    type: choice
+    options:
+      - force
+      - true
+      - false
+    default: true
   abandonOnFailure:
     description:
       Whether to abandon the created changeset if triggering the management
       function fails.
+    type: boolean
     required: false
     default: false
+  statusPollIntervalSeconds:
+    description: Length of time (in seconds) between checks for changeset status
+    type: number
+    default: 10
 
   workspaceId:
     description:

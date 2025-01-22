@@ -53686,6 +53686,9 @@ function getApiUrl() {
 function getWebUrl() {
     return coreExports.getInput('webUrl') || getApiUrl();
 }
+async function sleep(ms) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function run() {
     try {
@@ -53757,22 +53760,42 @@ async function triggerManagementFunction(client, { changeSetUrl }) {
     coreExports.endGroup();
 }
 async function applyChangeSet(client, { changeSetUrl }) {
-    console.log('applyChangeSet A');
-    let applyOnSuccess = coreExports.getInput('applyOnSuccess');
-    console.log('applyChangeSet A1');
-    if (applyOnSuccess !== 'force') {
-        console.log('applyChangeSet A2');
-        applyOnSuccess = coreExports.getBooleanInput('applyOnSuccess');
-        console.log(typeof applyOnSuccess, applyOnSuccess);
-    }
-    console.log('applyChangeSet B');
+    const applyOnSuccess = coreExports.getInput('applyOnSuccess') === 'force'
+        ? 'force'
+        : coreExports.getBooleanInput('applyOnSuccess');
     if (!applyOnSuccess)
         return false;
-    console.log('applyChangeSet C');
     coreExports.startGroup('Applying change set ...');
-    console.log(applyOnSuccess);
     if (applyOnSuccess === 'force') {
-        await client.post(`${changeSetUrl}/force_apply`);
+        const TIMEOUT_MS = 2 * 60 * 1000;
+        const POLL_INTERVAL_MS = 10 * 1000;
+        const startedAt = new Date();
+        while (true) {
+            try {
+                await client.post(`${changeSetUrl}/force_apply`);
+                break;
+            }
+            catch (error) {
+                if (axios.isAxiosError(error)) {
+                    console.log((error.response?.data).includes('dvu roots'));
+                }
+                // TODO wait for dvu roots explicitly, not via errors
+                if (axios.isAxiosError(error) &&
+                    error.response?.data?.includes('dvu roots')) {
+                    if (new Date().getTime() - startedAt.getTime() > TIMEOUT_MS) {
+                        coreExports.error('Timed out waiting for DVUs to complete');
+                        throw error;
+                    }
+                    else {
+                        coreExports.warning('DVUs not complete. Waiting ...');
+                        await sleep(POLL_INTERVAL_MS);
+                    }
+                }
+                else {
+                    throw error;
+                }
+            }
+        }
     }
     else {
         await client.post(`${changeSetUrl}/request_approval`);
@@ -53782,14 +53805,15 @@ async function applyChangeSet(client, { changeSetUrl }) {
 }
 async function waitForChangeSet(client, changeSet) {
     coreExports.startGroup('Waiting for change set to complete ...');
+    const statusPollIntervalMs = Number(coreExports.getInput('statusPollIntervalSeconds')) * 1000;
     while (!(await checkChangeSetStatus(client, changeSet))) {
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+        await sleep(statusPollIntervalMs);
     }
     coreExports.info('Change set is complete!');
     coreExports.endGroup();
 }
 async function checkChangeSetStatus(client, { changeSetUrl }) {
-    const { data: { changeSet, actions } } = await client.get(`${changeSetUrl}/merge_status`);
+    const { changeSet, actions } = (await client.get(`${changeSetUrl}/merge_status`)).data;
     switch (changeSet.status) {
         /* eslint-disable no-fallthrough */
         /// Planned to be abandoned but needs approval first
@@ -53802,14 +53826,14 @@ async function checkChangeSetStatus(client, { changeSetUrl }) {
             // Waiting
             return false;
         /// Applied this changeset to its parent
-        case 'Applied':
+        case 'Applied': {
             // If there are no actions left to do, we're done!
-            if (actions.length === 0) {
+            if (actions.length === 0)
                 return true;
-            }
             // Check for failure
+            let complete = true;
             for (const action of actions) {
-                switch (action.status) {
+                switch (action.state) {
                     /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
                     /// removed from the graph.
                     case 'Queued':
@@ -53823,17 +53847,19 @@ async function checkChangeSetStatus(client, { changeSetUrl }) {
                     /// queue.
                     case 'Dispatched':
                         // Waiting
+                        complete = false;
                         break;
                     /// Action failed during execution. See the job history for details.
                     case 'Failed':
                         // Failure
                         throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`);
                     default:
-                        throw new Error(`Unknown action status: ${action.status}`);
+                        throw new Error(`Unknown action status: ${action.state}`);
                 }
             }
             // Some jobs are still unfinished! Waiting.
-            return true;
+            return complete;
+        }
         /// No longer usable
         case 'Abandoned':
         /// Migration of Workspace Snapshot for this change set failed

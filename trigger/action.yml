@@ -48,6 +48,27 @@ inputs:
       - true
       - false
     default: true
+  waitForApproval:
+    description: Whether to wait for approval before applying the changeset (and
+      fail if it is rejected).
+
+      By default, we do not wait. If applyOnSuccess is anything but true (the
+      default), this is ignored.
+
+      If this is true, we will also wait for actions to complete unless you
+      explicitly set waitForActions=false.
+    type: boolean
+    required: false
+    default: false
+  waitForActions:
+    description: Whether to wait for actions to complete (and fail if the
+      actions fail).
+
+      By default, we wait for actions if applyOnSuccess=force or
+      waitForApproval=true--otherwise this setting is ignored.
+    type: boolean
+    required: false
+    default: true
   abandonOnFailure:
     description:
       Whether to abandon the created changeset if triggering the management
@@ -55,8 +76,10 @@ inputs:
     type: boolean
     required: false
     default: false
-  statusPollIntervalSeconds:
-    description: Length of time (in seconds) between checks for changeset status
+  pollIntervalSeconds:
+    description:
+      Length of time (in seconds) between checks when polling for changeset
+      status
     type: number
     default: 10
 

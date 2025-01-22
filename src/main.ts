@@ -106,29 +106,18 @@ async function applyChangeSet(
   if (!applyOnSuccess) return false
   core.startGroup('Applying change set ...')
   if (applyOnSuccess === 'force') {
-    const TIMEOUT_MS = 2 * 60 * 1000
-    const POLL_INTERVAL_MS = 10 * 1000
-    const startedAt = new Date()
     while (true) {
       try {
         await client.post(`${changeSetUrl}/force_apply`)
         break
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.log((error.response?.data as string).includes('dvu roots'))
-        }
         // TODO wait for dvu roots explicitly, not via errors
         if (
           axios.isAxiosError(error) &&
           error.response?.data?.includes('dvu roots')
         ) {
-          if (new Date().getTime() - startedAt.getTime() > TIMEOUT_MS) {
-            core.error('Timed out waiting for DVUs to complete')
-            throw error
-          } else {
-            core.warning('DVUs not complete. Waiting ...')
-            await sleep(POLL_INTERVAL_MS)
-          }
+          core.warning('DVUs not complete. Waiting ...')
+          await sleep(getPollInterval())
         } else {
           throw error
         }
@@ -143,10 +132,10 @@ async function applyChangeSet(
 
 async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
   core.startGroup('Waiting for change set to complete ...')
-  const statusPollIntervalMs =
-    Number(core.getInput('statusPollIntervalSeconds')) * 1000
+
   while (!(await checkChangeSetStatus(client, changeSet))) {
-    await sleep(statusPollIntervalMs)
+    // If we're not ready yet, poll again after a delay
+    await sleep(getPollInterval())
   }
   core.info('Change set is complete!')
   core.endGroup()
@@ -156,6 +145,9 @@ async function checkChangeSetStatus(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
+  const waitForApproval = core.getBooleanInput('waitForApproval')
+  const waitForActions = core.getBooleanInput('waitForActions')
+
   const { changeSet, actions } = (
     await client.get(`${changeSetUrl}/merge_status`)
   ).data as {
@@ -172,13 +164,18 @@ async function checkChangeSetStatus(
     case 'NeedsApproval':
     /// Approved by relevant parties and ready to be applied
     case 'Approved':
-      // Waiting
-      return false
+      if (!waitForApproval) {
+        core.info('Not waiting for approval')
+        return true
+      }
+      return false // Waiting for approval/apply
 
     /// Applied this changeset to its parent
     case 'Applied': {
-      // If there are no actions left to do, we're done!
-      if (actions.length === 0) return true
+      if (!waitForActions) {
+        core.info('Not waiting for actions')
+        return true
+      }
 
       // Check for failure
       let complete = true
@@ -206,7 +203,7 @@ async function checkChangeSetStatus(
             throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`)
 
           default:
-            throw new Error(`Unknown action status: ${action.state}`)
+            throw new Error(`Unknown action state: ${action.state}`)
         }
       }
       // Some jobs are still unfinished! Waiting.
@@ -227,4 +224,8 @@ async function checkChangeSetStatus(
     default:
       throw new Error(`Unknown change set status: ${changeSet.status}`)
   }
+}
+
+function getPollInterval() {
+  return Number(core.getInput('pollIntervalSeconds')) * 1000
 }

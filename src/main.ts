@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import YAML from 'yaml'
-import { AxiosInstance } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import { createSiApiClient, getWebUrl, sleep } from '../src/utils.js'
 
 export async function run() {
@@ -106,7 +106,34 @@ async function applyChangeSet(
   if (!applyOnSuccess) return false
   core.startGroup('Applying change set ...')
   if (applyOnSuccess === 'force') {
-    await client.post(`${changeSetUrl}/force_apply`)
+    const TIMEOUT_MS = 2 * 60 * 1000
+    const POLL_INTERVAL_MS = 10 * 1000
+    const startedAt = new Date()
+    while (true) {
+      try {
+        await client.post(`${changeSetUrl}/force_apply`)
+        break
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.log((error.response?.data as string).includes('dvu roots'))
+        }
+        // TODO wait for dvu roots explicitly, not via errors
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.data?.includes('dvu roots')
+        ) {
+          if (new Date().getTime() - startedAt.getTime() > TIMEOUT_MS) {
+            core.error('Timed out waiting for DVUs to complete')
+            throw error
+          } else {
+            core.warning('DVUs not complete. Waiting ...')
+            await sleep(POLL_INTERVAL_MS)
+          }
+        } else {
+          throw error
+        }
+      }
+    }
   } else {
     await client.post(`${changeSetUrl}/request_approval`)
   }
@@ -154,6 +181,7 @@ async function checkChangeSetStatus(
       if (actions.length === 0) return true
 
       // Check for failure
+      let complete = true
       for (const action of actions) {
         switch (action.state) {
           /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
@@ -169,6 +197,7 @@ async function checkChangeSetStatus(
           /// queue.
           case 'Dispatched':
             // Waiting
+            complete = false
             break
 
           /// Action failed during execution. See the job history for details.
@@ -181,7 +210,7 @@ async function checkChangeSetStatus(
         }
       }
       // Some jobs are still unfinished! Waiting.
-      return true
+      return complete
 
     /// No longer usable
     case 'Abandoned':

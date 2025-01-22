@@ -176,7 +176,7 @@ async function checkChangeSetStatus(
       return false
 
     /// Applied this changeset to its parent
-    case 'Applied':
+    case 'Applied': {
       // If there are no actions left to do, we're done!
       if (actions.length === 0) return true
 
@@ -211,6 +211,7 @@ async function checkChangeSetStatus(
       }
       // Some jobs are still unfinished! Waiting.
       return complete
+    }
 
     /// No longer usable
     case 'Abandoned':

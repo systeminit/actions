@@ -52,7 +52,7 @@ jobs:
 
       - name: Test Local Action
         id: test-action
-        uses: systeminit/actions/trigger@main
+        uses: systeminit/actions@main
         with:
           changeSetName: Testing 123
           componentId: 01JJ4TXDYTKY91R04ET8GCM675

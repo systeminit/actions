@@ -40,8 +40,9 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
     if (!changeSet) {
       throw new Error(`Neither changeSet not changeSetId is specified`)
     }
-    changeSetId = (await client.post(changeSetsUrl, { changeSet })).data
-      .changeSet.id
+    changeSetId = (
+      await client.post(changeSetsUrl, { changeSetName: changeSet })
+    ).data.changeSet.id
     core.endGroup()
   }
 

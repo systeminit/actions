@@ -12,7 +12,7 @@ import require$$0$3 from 'util';
 import stream, { Readable } from 'stream';
 import require$$7 from 'buffer';
 import require$$8 from 'querystring';
-import require$$14 from 'stream/web';
+import require$$13 from 'stream/web';
 import require$$0$7 from 'node:stream';
 import require$$1$2 from 'node:util';
 import require$$0$6 from 'node:events';
@@ -28,6 +28,38 @@ import require$$0$a from 'diagnostics_channel';
 import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
 import require$$1$5 from 'tty';
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1473,7 +1505,7 @@ function requireUtil$6 () {
 	let ReadableStream;
 	function ReadableStreamFrom (iterable) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = require$$13.ReadableStream;
 	  }
 
 	  if (ReadableStream.from) {
@@ -4530,7 +4562,7 @@ function requireUtil$5 () {
 
 	function isReadableStreamLike (stream) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = require$$13.ReadableStream;
 	  }
 
 	  return stream instanceof ReadableStream || (
@@ -6670,14 +6702,6 @@ function requireBody () {
 	const { File: UndiciFile } = requireFile();
 	const { parseMIMEType, serializeAMimeType } = requireDataURL();
 
-	let random;
-	try {
-	  const crypto = require('node:crypto');
-	  random = (max) => crypto.randomInt(0, max);
-	} catch {
-	  random = (max) => Math.floor(Math.random(max));
-	}
-
 	let ReadableStream = globalThis.ReadableStream;
 
 	/** @type {globalThis['File']} */
@@ -6688,7 +6712,7 @@ function requireBody () {
 	// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 	function extractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = require$$13.ReadableStream;
 	  }
 
 	  // 1. Let stream be null.
@@ -6763,7 +6787,7 @@ function requireBody () {
 	    // Set source to a copy of the bytes held by object.
 	    source = new Uint8Array(object.buffer.slice(object.byteOffset, object.byteOffset + object.byteLength));
 	  } else if (util.isFormDataLike(object)) {
-	    const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, '0')}`;
+	    const boundary = `----formdata-undici-0${`${Math.floor(Math.random() * 1e11)}`.padStart(11, '0')}`;
 	    const prefix = `--${boundary}\r\nContent-Disposition: form-data`;
 
 	    /*! formdata-polyfill. MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
@@ -6909,7 +6933,7 @@ function requireBody () {
 	function safelyExtractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
 	    // istanbul ignore next
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = require$$13.ReadableStream;
 	  }
 
 	  // To safely extract a body and a `Content-Type` value from
@@ -15565,7 +15589,7 @@ function requireResponse () {
 	const assert = require$$0$4;
 	const { types } = require$$0$3;
 
-	const ReadableStream = globalThis.ReadableStream || require$$14.ReadableStream;
+	const ReadableStream = globalThis.ReadableStream || require$$13.ReadableStream;
 	const textEncoder = new TextEncoder('utf-8');
 
 	// https://fetch.spec.whatwg.org/#response-class
@@ -16634,7 +16658,7 @@ function requireRequest () {
 
 	      // 2. Set finalBody to the result of creating a proxy for inputBody.
 	      if (!TransformStream) {
-	        TransformStream = require$$14.TransformStream;
+	        TransformStream = require$$13.TransformStream;
 	      }
 
 	      // https://streams.spec.whatwg.org/#readablestream-create-a-proxy
@@ -17127,7 +17151,7 @@ function requireFetch () {
 	const { Readable, pipeline } = stream;
 	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = requireUtil$6();
 	const { dataURLProcessor, serializeAMimeType } = requireDataURL();
-	const { TransformStream } = require$$14;
+	const { TransformStream } = require$$13;
 	const { getGlobalDispatcher } = requireGlobal();
 	const { webidl } = requireWebidl();
 	const { STATUS_CODES } = require$$2;
@@ -18797,7 +18821,7 @@ function requireFetch () {
 	  // cancelAlgorithm set to cancelAlgorithm, highWaterMark set to
 	  // highWaterMark, and sizeAlgorithm set to sizeAlgorithm.
 	  if (!ReadableStream) {
-	    ReadableStream = require$$14.ReadableStream;
+	    ReadableStream = require$$13.ReadableStream;
 	  }
 
 	  const stream = new ReadableStream(
@@ -32827,20 +32851,20 @@ function tokenType(source) {
 }
 
 var cst = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	BOM: BOM,
-	DOCUMENT: DOCUMENT,
-	FLOW_END: FLOW_END,
-	SCALAR: SCALAR,
-	createScalarToken: createScalarToken,
-	isCollection: isCollection,
-	isScalar: isScalar,
-	prettyToken: prettyToken,
-	resolveAsScalar: resolveAsScalar,
-	setScalarValue: setScalarValue,
-	stringify: stringify$1,
-	tokenType: tokenType,
-	visit: visit
+    __proto__: null,
+    BOM: BOM,
+    DOCUMENT: DOCUMENT,
+    FLOW_END: FLOW_END,
+    SCALAR: SCALAR,
+    createScalarToken: createScalarToken,
+    isCollection: isCollection,
+    isScalar: isScalar,
+    prettyToken: prettyToken,
+    resolveAsScalar: resolveAsScalar,
+    setScalarValue: setScalarValue,
+    stringify: stringify$1,
+    tokenType: tokenType,
+    visit: visit
 });
 
 /*
@@ -34639,36 +34663,36 @@ function stringify(value, replacer, options) {
 }
 
 var YAML = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Alias: Alias,
-	CST: cst,
-	Composer: Composer,
-	Document: Document,
-	Lexer: Lexer,
-	LineCounter: LineCounter,
-	Pair: Pair,
-	Parser: Parser,
-	Scalar: Scalar,
-	Schema: Schema,
-	YAMLError: YAMLError,
-	YAMLMap: YAMLMap,
-	YAMLParseError: YAMLParseError,
-	YAMLSeq: YAMLSeq,
-	YAMLWarning: YAMLWarning,
-	isAlias: isAlias,
-	isCollection: isCollection$1,
-	isDocument: isDocument,
-	isMap: isMap,
-	isNode: isNode,
-	isPair: isPair,
-	isScalar: isScalar$1,
-	isSeq: isSeq,
-	parse: parse,
-	parseAllDocuments: parseAllDocuments,
-	parseDocument: parseDocument,
-	stringify: stringify,
-	visit: visit$1,
-	visitAsync: visitAsync
+    __proto__: null,
+    Alias: Alias,
+    CST: cst,
+    Composer: Composer,
+    Document: Document,
+    Lexer: Lexer,
+    LineCounter: LineCounter,
+    Pair: Pair,
+    Parser: Parser,
+    Scalar: Scalar,
+    Schema: Schema,
+    YAMLError: YAMLError,
+    YAMLMap: YAMLMap,
+    YAMLParseError: YAMLParseError,
+    YAMLSeq: YAMLSeq,
+    YAMLWarning: YAMLWarning,
+    isAlias: isAlias,
+    isCollection: isCollection$1,
+    isDocument: isDocument,
+    isMap: isMap,
+    isNode: isNode,
+    isPair: isPair,
+    isScalar: isScalar$1,
+    isSeq: isSeq,
+    parse: parse,
+    parseAllDocuments: parseAllDocuments,
+    parseDocument: parseDocument,
+    stringify: stringify,
+    visit: visit$1,
+    visitAsync: visitAsync
 });
 
 function bind(fn, thisArg) {
@@ -48240,12 +48264,12 @@ const hasStandardBrowserWebWorkerEnv = (() => {
 const origin = hasBrowserEnv && window.location.href || 'http://localhost';
 
 var utils = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	hasBrowserEnv: hasBrowserEnv,
-	hasStandardBrowserEnv: hasStandardBrowserEnv,
-	hasStandardBrowserWebWorkerEnv: hasStandardBrowserWebWorkerEnv,
-	navigator: _navigator,
-	origin: origin
+    __proto__: null,
+    hasBrowserEnv: hasBrowserEnv,
+    hasStandardBrowserEnv: hasStandardBrowserEnv,
+    hasStandardBrowserWebWorkerEnv: hasStandardBrowserWebWorkerEnv,
+    navigator: _navigator,
+    origin: origin
 });
 
 var platform = {
@@ -53663,7 +53687,8 @@ function createSiApiClient() {
     });
     // Log requests
     client.interceptors.request.use((config) => {
-        coreExports.info(`Sending ${config.method?.toUpperCase() ?? 'GET'} ${config.url} ${config.data ? JSON.stringify(config.data, null, 2) : ''}`);
+        var _a, _b;
+        coreExports.info(`Sending ${(_b = (_a = config.method) === null || _a === undefined ? undefined : _a.toUpperCase()) !== null && _b !== undefined ? _b : 'GET'} ${config.url} ${config.data ? JSON.stringify(config.data, null, 2) : ''}`);
         if (config.data)
             coreExports.info(`Payload: ${JSON.stringify(config.data, null, 2)}`);
         return config;
@@ -53672,9 +53697,10 @@ function createSiApiClient() {
         coreExports.info(`Response: ${response.status} ${response.statusText} ${JSON.stringify(response.data, null, 2)}`);
         return response;
     }, (err) => {
+        var _a;
         // Log errors and end the group for this request
         if (axios.isAxiosError(err)) {
-            coreExports.error(`${err.message}\n${err.response?.data}`);
+            coreExports.error(`${err.message}\n${(_a = err.response) === null || _a === undefined ? undefined : _a.data}`);
         }
         else {
             coreExports.error(err);
@@ -53694,226 +53720,247 @@ function getApiUrl() {
 function getWebUrl() {
     return coreExports.getInput('webUrl') || getApiUrl();
 }
-async function sleep(ms) {
-    await new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms) {
+    return __awaiter(this, undefined, undefined, function* () {
+        yield new Promise((resolve) => setTimeout(resolve, ms));
+    });
 }
 
-async function run() {
-    try {
-        const client = createSiApiClient();
-        const workspaceId = await getWorkspaceId(client);
-        const changeSet = await getChangeSet(client, workspaceId);
-        await setComponentProperties(client, changeSet);
-        await triggerManagementFunction(client, changeSet);
-        if (await applyChangeSet(client, changeSet)) {
-            await waitForChangeSet(client, changeSet);
+function run() {
+    return __awaiter(this, undefined, undefined, function* () {
+        try {
+            const client = createSiApiClient();
+            const workspaceId = yield getWorkspaceId(client);
+            const changeSet = yield getChangeSet(client, workspaceId);
+            yield setComponentProperties(client, changeSet);
+            yield triggerManagementFunction(client, changeSet);
+            if (yield applyChangeSet(client, changeSet)) {
+                yield waitForChangeSet(client, changeSet);
+            }
         }
-    }
-    catch (error) {
-        coreExports.setFailed(error);
-    }
+        catch (error) {
+            coreExports.setFailed(error);
+        }
+    });
 }
-// Get workspaceId from input (or from token if not specified)
-async function getWorkspaceId(client) {
-    let workspaceId = coreExports.getInput('workspaceId');
-    if (!workspaceId) {
-        coreExports.startGroup('Getting workspaceId from token ...');
-        workspaceId = (await client.get(`/api/whoami`)).data.workspaceId;
-        coreExports.endGroup();
-    }
-    coreExports.setOutput('workspaceId', workspaceId);
-    return workspaceId;
+function getWorkspaceId(client) {
+    return __awaiter(this, undefined, undefined, function* () {
+        let workspaceId = coreExports.getInput('workspaceId');
+        if (!workspaceId) {
+            coreExports.startGroup('Getting workspaceId from token ...');
+            workspaceId = (yield client.get(`/api/whoami`)).data.workspaceId;
+            coreExports.endGroup();
+        }
+        coreExports.setOutput('workspaceId', workspaceId);
+        return workspaceId;
+    });
 }
 // Get changeSetId from input (or create if requested)
-async function getChangeSet(client, workspaceId) {
-    const changeSetsUrl = `/api/public/v0/workspaces/${workspaceId}/change-sets`;
-    let changeSetId = coreExports.getInput('changeSetId');
-    let createdChangeSet = false;
-    if (changeSetId === 'create') {
-        coreExports.startGroup('Creating change set ...');
-        const changeSetName = coreExports.getInput('changeSetName');
-        changeSetId = (await client.post(changeSetsUrl, { changeSetName })).data
-            .changeSet.id;
-        createdChangeSet = true;
-        coreExports.endGroup();
-    }
-    coreExports.setOutput('changeSetId', changeSetId);
-    const changeSetWebUrl = `${getWebUrl()}/w/${workspaceId}/${changeSetId}/c}`;
-    coreExports.setOutput('changeSetWebUrl', changeSetWebUrl);
-    return {
-        changeSetId,
-        createdChangeSet,
-        changeSetWebUrl,
-        changeSetUrl: `${changeSetsUrl}/${changeSetId}`
-    };
-}
-async function setComponentProperties(client, { changeSetWebUrl, changeSetUrl }) {
-    coreExports.startGroup('Setting component properties ...');
-    // Get workspaceId from input or from whoami if there is no input
-    const componentId = coreExports.getInput('componentId');
-    const domain = YAML.parse(coreExports.getInput('domain'));
-    await client.put(`${changeSetUrl}/components/${componentId}/properties`, {
-        domain
+function getChangeSet(client, workspaceId) {
+    return __awaiter(this, undefined, undefined, function* () {
+        const changeSetsUrl = `/api/public/v0/workspaces/${workspaceId}/change-sets`;
+        let changeSetId = coreExports.getInput('changeSetId');
+        if (!changeSetId) {
+            coreExports.startGroup('Creating new change set ...');
+            const changeSet = coreExports.getInput('changeSet');
+            if (!changeSet) {
+                throw new Error(`Neither changeSet not changeSetId is specified`);
+            }
+            changeSetId = (yield client.post(changeSetsUrl, { changeSet })).data
+                .changeSet.id;
+            coreExports.endGroup();
+        }
+        coreExports.setOutput('changeSetId', changeSetId);
+        const changeSetWebUrl = `${getWebUrl()}/w/${workspaceId}/${changeSetId}/c}`;
+        coreExports.setOutput('changeSetWebUrl', changeSetWebUrl);
+        return {
+            changeSetId,
+            changeSetWebUrl,
+            changeSetUrl: `${changeSetsUrl}/${changeSetId}`
+        };
     });
-    coreExports.setOutput('componentWebUrl', `${changeSetWebUrl}?s=c_${componentId}&t=attributes`);
-    coreExports.endGroup();
 }
-async function triggerManagementFunction(client, { changeSetUrl }) {
-    coreExports.startGroup('Triggering management function ...');
-    const { componentId, managementPrototypeId, viewId } = await getInputs();
-    const { data: { message } } = await client.post(`${changeSetUrl}/management/prototype/${managementPrototypeId}/${componentId}/${viewId}`, {});
-    coreExports.setOutput('managementFunctionLogs', message);
-    coreExports.endGroup();
-    // Look up viewId and managementPrototypeId from component
-    async function getInputs() {
+function setComponentProperties(client_1, _a) {
+    return __awaiter(this, arguments, undefined, function* (client, { changeSetWebUrl, changeSetUrl }) {
+        coreExports.startGroup('Setting component properties ...');
+        // Get workspaceId from input or from whoami if there is no input
         const componentId = coreExports.getInput('componentId');
-        let viewId = coreExports.getInput('viewId');
-        let managementPrototypeId = coreExports.getInput('managementPrototypeId');
-        console.log('Inferring viewId and managementPrototypeId ...');
-        const data = (await client.get(`${changeSetUrl}/components/${componentId}`))
-            .data;
-        const componentName = data.component.displayName;
-        // Pick the only view (possibly by name) if not specified
-        if (!viewId) {
-            // If "view" name was specified, narrow down the list.
-            const view = coreExports.getInput('view');
-            const matchingViews = view
-                ? data.viewData.filter((v) => v.name === view)
-                : data.viewData;
-            const suffix = view ? ` named "${view}"` : '';
-            // Pick the single match (and error if there is not a single match)
-            if (matchingViews.length > 1)
-                throw new Error(`Component ${componentName} has multiple views${suffix}--pick which one to run in using the "view" or "viewId" parameters.\n${data.viewData}`);
-            viewId = matchingViews[0]?.viewId;
-            if (!viewId)
-                throw new Error(`Component ${componentName} has no views${suffix}`);
-        }
-        // Pick the only management function (possibly by name) if not specified
-        if (!managementPrototypeId) {
-            // If "managementFunction" name was specified, narrow down the list
-            const managementFunction = coreExports.getInput('managementFunction');
-            const matchingFunctions = managementFunction
-                ? data.managementFunctions.filter((f) => f.name === managementFunction)
-                : data.managementFunctions;
-            const suffix = managementFunction ? ` named "${managementFunction}"` : '';
-            // Pick the single match (and error if there is not a single match)
-            if (matchingFunctions.length > 1)
-                throw new Error(`Component ${componentName} has multiple management functions${suffix}--pick which one to run using the "managementFunction" or "managementPrototypeId" parameters.\n${data.managementFunctions}`);
-            managementPrototypeId = matchingFunctions[0]?.managementPrototypeId;
-            if (!managementPrototypeId)
-                throw new Error(`Component ${componentName} has no management functions${suffix}`);
-        }
-        return { componentId, viewId, managementPrototypeId };
-    }
+        const domain = YAML.parse(coreExports.getInput('domain'));
+        yield client.put(`${changeSetUrl}/components/${componentId}/properties`, {
+            domain
+        });
+        coreExports.setOutput('componentWebUrl', `${changeSetWebUrl}?s=c_${componentId}&t=attributes`);
+        coreExports.endGroup();
+    });
 }
-async function applyChangeSet(client, { changeSetUrl }) {
-    const applyOnSuccess = coreExports.getInput('applyOnSuccess') === 'force'
-        ? 'force'
-        : coreExports.getBooleanInput('applyOnSuccess');
-    if (!applyOnSuccess)
-        return false;
-    coreExports.startGroup('Applying change set ...');
-    if (applyOnSuccess === 'force') {
-        while (true) {
-            try {
-                await client.post(`${changeSetUrl}/force_apply`);
-                break;
-            }
-            catch (error) {
-                // TODO wait for dvu roots explicitly, not via errors
-                if (axios.isAxiosError(error) &&
-                    error.response?.data?.includes('dvu roots')) {
-                    coreExports.warning('DVUs not complete. Waiting ...');
-                    await sleep(getPollInterval());
+function triggerManagementFunction(client_1, _a) {
+    return __awaiter(this, arguments, undefined, function* (client, { changeSetUrl }) {
+        coreExports.startGroup('Triggering management function ...');
+        const { componentId, managementPrototypeId, viewId } = yield getInputs();
+        const { data: { message } } = yield client.post(`${changeSetUrl}/management/prototype/${managementPrototypeId}/${componentId}/${viewId}`, {});
+        coreExports.setOutput('managementFunctionLogs', message);
+        coreExports.endGroup();
+        // Look up viewId and managementPrototypeId from component
+        function getInputs() {
+            return __awaiter(this, undefined, undefined, function* () {
+                var _a, _b;
+                const componentId = coreExports.getInput('componentId');
+                let viewId = coreExports.getInput('viewId');
+                let managementPrototypeId = coreExports.getInput('managementPrototypeId');
+                console.log('Inferring viewId and managementPrototypeId ...');
+                const data = (yield client.get(`${changeSetUrl}/components/${componentId}`))
+                    .data;
+                const componentName = data.component.displayName;
+                // Pick the only view (possibly by name) if not specified
+                if (!viewId) {
+                    // If "view" name was specified, narrow down the list.
+                    const view = coreExports.getInput('view');
+                    const matchingViews = view
+                        ? data.viewData.filter((v) => v.name === view)
+                        : data.viewData;
+                    const suffix = view ? ` named "${view}"` : '';
+                    // Pick the single match (and error if there is not a single match)
+                    if (matchingViews.length > 1)
+                        throw new Error(`Component ${componentName} has multiple views${suffix}--pick which one to run in using the "view" or "viewId" parameters.\n${data.viewData}`);
+                    viewId = (_a = matchingViews[0]) === null || _a === undefined ? undefined : _a.viewId;
+                    if (!viewId)
+                        throw new Error(`Component ${componentName} has no views${suffix}`);
                 }
-                else {
-                    throw error;
+                // Pick the only management function (possibly by name) if not specified
+                if (!managementPrototypeId) {
+                    // If "managementFunction" name was specified, narrow down the list
+                    const managementFunction = coreExports.getInput('managementFunction');
+                    const matchingFunctions = managementFunction
+                        ? data.managementFunctions.filter((f) => f.name === managementFunction)
+                        : data.managementFunctions;
+                    const suffix = managementFunction ? ` named "${managementFunction}"` : '';
+                    // Pick the single match (and error if there is not a single match)
+                    if (matchingFunctions.length > 1)
+                        throw new Error(`Component ${componentName} has multiple management functions${suffix}--pick which one to run using the "managementFunction" or "managementPrototypeId" parameters.\n${data.managementFunctions}`);
+                    managementPrototypeId = (_b = matchingFunctions[0]) === null || _b === undefined ? undefined : _b.managementPrototypeId;
+                    if (!managementPrototypeId)
+                        throw new Error(`Component ${componentName} has no management functions${suffix}`);
                 }
-            }
+                return { componentId, viewId, managementPrototypeId };
+            });
         }
-    }
-    else {
-        await client.post(`${changeSetUrl}/request_approval`);
-    }
-    coreExports.endGroup();
-    return !!applyOnSuccess;
+    });
 }
-async function waitForChangeSet(client, changeSet) {
-    coreExports.startGroup('Waiting for change set to complete ...');
-    while (!(await checkChangeSetStatus(client, changeSet))) {
-        // If we're not ready yet, poll again after a delay
-        await sleep(getPollInterval());
-    }
-    coreExports.info('Change set is complete!');
-    coreExports.endGroup();
-}
-async function checkChangeSetStatus(client, { changeSetUrl }) {
-    const waitForApproval = coreExports.getBooleanInput('waitForApproval');
-    const waitForActions = coreExports.getBooleanInput('waitForActions');
-    const { changeSet, actions } = (await client.get(`${changeSetUrl}/merge_status`)).data;
-    switch (changeSet.status) {
-        /* eslint-disable no-fallthrough */
-        /// Planned to be abandoned but needs approval first
-        /// todo(brit): Remove once rebac is done
-        case 'NeedsAbandonApproval':
-        /// Planned to be applied but needs approval first
-        case 'NeedsApproval':
-        /// Approved by relevant parties and ready to be applied
-        case 'Approved':
-            if (!waitForApproval) {
-                coreExports.info('Not waiting for approval');
-                return true;
-            }
-            return false; // Waiting for approval/apply
-        /// Applied this changeset to its parent
-        case 'Applied': {
-            if (!waitForActions) {
-                coreExports.info('Not waiting for actions');
-                return true;
-            }
-            // Check for failure
-            let complete = true;
-            for (const action of actions) {
-                switch (action.state) {
-                    /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
-                    /// removed from the graph.
-                    case 'Queued':
-                    /// Action has been dispatched, and started execution in the job system. See the job history
-                    /// for details.
-                    case 'Running':
-                    /// Action is "queued", but should not be considered as eligible to run, until moved to the
-                    /// `Queued` state.
-                    case 'OnHold':
-                    /// Action has been determined to be eligible to run, and has had its job sent to the job
-                    /// queue.
-                    case 'Dispatched':
-                        // Waiting
-                        complete = false;
-                        break;
-                    /// Action failed during execution. See the job history for details.
-                    case 'Failed':
-                        // Failure
-                        throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`);
-                    default:
-                        throw new Error(`Unknown action state: ${action.state}`);
+function applyChangeSet(client_1, _a) {
+    return __awaiter(this, arguments, undefined, function* (client, { changeSetUrl }) {
+        var _b, _c;
+        const applyOnSuccess = coreExports.getInput('applyOnSuccess') === 'force'
+            ? 'force'
+            : coreExports.getBooleanInput('applyOnSuccess');
+        if (!applyOnSuccess)
+            return false;
+        coreExports.startGroup('Applying change set ...');
+        if (applyOnSuccess === 'force') {
+            while (true) {
+                try {
+                    yield client.post(`${changeSetUrl}/force_apply`);
+                    break;
+                }
+                catch (error) {
+                    // TODO wait for dvu roots explicitly, not via errors
+                    if (axios.isAxiosError(error) &&
+                        ((_c = (_b = error.response) === null || _b === undefined ? undefined : _b.data) === null || _c === undefined ? undefined : _c.includes('dvu roots'))) {
+                        coreExports.warning('DVUs not complete. Waiting ...');
+                        yield sleep(getPollInterval());
+                    }
+                    else {
+                        throw error;
+                    }
                 }
             }
-            // Some jobs are still unfinished! Waiting.
-            return complete;
         }
-        /// No longer usable
-        case 'Abandoned':
-        /// Migration of Workspace Snapshot for this change set failed
-        case 'Failed':
-        /// Request to apply was rejected
-        case 'Rejected':
-        /// Available for user's to modify
-        case 'Open':
-            // Can't make progress on these cases
-            throw new Error(`Change set status is ${changeSet.status}`);
-        default:
-            throw new Error(`Unknown change set status: ${changeSet.status}`);
-    }
+        else {
+            yield client.post(`${changeSetUrl}/request_approval`);
+        }
+        coreExports.endGroup();
+        return !!applyOnSuccess;
+    });
+}
+function waitForChangeSet(client, changeSet) {
+    return __awaiter(this, undefined, undefined, function* () {
+        coreExports.startGroup('Waiting for change set to complete ...');
+        while (!(yield checkChangeSetStatus(client, changeSet))) {
+            // If we're not ready yet, poll again after a delay
+            yield sleep(getPollInterval());
+        }
+        coreExports.info('Change set is complete!');
+        coreExports.endGroup();
+    });
+}
+function checkChangeSetStatus(client_1, _a) {
+    return __awaiter(this, arguments, undefined, function* (client, { changeSetUrl }) {
+        const waitForApproval = coreExports.getBooleanInput('waitForApproval');
+        const waitForActions = coreExports.getBooleanInput('waitForActions');
+        const { changeSet, actions } = (yield client.get(`${changeSetUrl}/merge_status`)).data;
+        switch (changeSet.status) {
+            /* eslint-disable no-fallthrough */
+            /// Planned to be abandoned but needs approval first
+            /// todo(brit): Remove once rebac is done
+            case 'NeedsAbandonApproval':
+            /// Planned to be applied but needs approval first
+            case 'NeedsApproval':
+            /// Approved by relevant parties and ready to be applied
+            case 'Approved':
+                if (!waitForApproval) {
+                    coreExports.info('Not waiting for approval');
+                    return true;
+                }
+                return false; // Waiting for approval/apply
+            /// Applied this changeset to its parent
+            case 'Applied': {
+                if (!waitForActions) {
+                    coreExports.info('Not waiting for actions');
+                    return true;
+                }
+                // Check for failure
+                let complete = true;
+                for (const action of actions) {
+                    switch (action.state) {
+                        /// Action is available to be dispatched once all of its prerequisites have succeeded, and been
+                        /// removed from the graph.
+                        case 'Queued':
+                        /// Action has been dispatched, and started execution in the job system. See the job history
+                        /// for details.
+                        case 'Running':
+                        /// Action is "queued", but should not be considered as eligible to run, until moved to the
+                        /// `Queued` state.
+                        case 'OnHold':
+                        /// Action has been determined to be eligible to run, and has had its job sent to the job
+                        /// queue.
+                        case 'Dispatched':
+                            // Waiting
+                            complete = false;
+                            break;
+                        /// Action failed during execution. See the job history for details.
+                        case 'Failed':
+                            // Failure
+                            throw new Error(`Action failed: ${JSON.stringify(action, null, 2)}`);
+                        default:
+                            throw new Error(`Unknown action state: ${action.state}`);
+                    }
+                }
+                // Some jobs are still unfinished! Waiting.
+                return complete;
+            }
+            /// No longer usable
+            case 'Abandoned':
+            /// Migration of Workspace Snapshot for this change set failed
+            case 'Failed':
+            /// Request to apply was rejected
+            case 'Rejected':
+            /// Available for user's to modify
+            case 'Open':
+                // Can't make progress on these cases
+                throw new Error(`Change set status is ${changeSet.status}`);
+            default:
+                throw new Error(`Unknown change set status: ${changeSet.status}`);
+        }
+    });
 }
 function getPollInterval() {
     return Number(coreExports.getInput('pollIntervalSeconds')) * 1000;

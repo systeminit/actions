@@ -18,7 +18,6 @@ export async function run() {
   }
 }
 
-// Get workspaceId from input (or from token if not specified)
 async function getWorkspaceId(client: AxiosInstance) {
   let workspaceId = core.getInput('workspaceId')
   if (!workspaceId) {
@@ -35,13 +34,14 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
   const changeSetsUrl = `/api/public/v0/workspaces/${workspaceId}/change-sets`
 
   let changeSetId = core.getInput('changeSetId')
-  let createdChangeSet = false
-  if (changeSetId === 'create') {
-    core.startGroup('Creating change set ...')
-    const changeSetName = core.getInput('changeSetName')
-    changeSetId = (await client.post(changeSetsUrl, { changeSetName })).data
+  if (!changeSetId) {
+    core.startGroup('Creating new change set ...')
+    const changeSet = core.getInput('changeSet')
+    if (!changeSet) {
+      throw new Error(`Neither changeSet not changeSetId is specified`)
+    }
+    changeSetId = (await client.post(changeSetsUrl, { changeSet })).data
       .changeSet.id
-    createdChangeSet = true
     core.endGroup()
   }
 
@@ -50,7 +50,6 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
   core.setOutput('changeSetWebUrl', changeSetWebUrl)
   return {
     changeSetId,
-    createdChangeSet,
     changeSetWebUrl,
     changeSetUrl: `${changeSetsUrl}/${changeSetId}`
   }

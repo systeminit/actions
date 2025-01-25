@@ -49,18 +49,23 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-
+      - name: Set dynamic date
+        id: set-date
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          echo "DATE=$DATE" >> "$GITHUB_ENV"
       - name: Test Local Action
         id: test-action
         uses: systeminit/actions@main
         with:
-          changeSet: Testing 123
-          componentId: 01JJ4TXDYTKY91R04ET8GCM675
+          changeSet: 'Testing Action - ${{ env.DATE }}'
+          componentId: 01JJFCNPEGPWFHARX2C3GW98XR
           domain: |
             Region: us-east-1
             BaseCidrBlock: 10.0.0.0/16
-          managementPrototypeId: 01JJ4TXDWKWX230NVYQTM51E3N
-          viewId: 01JATWJV2RA407RZFZBQ9PT5ES
+            BaseNamingConvention: GitHub Action
+          managementFunction: 'Create VPC Template'
+          applyOnSuccess: false
           apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output

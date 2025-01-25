@@ -15,7 +15,7 @@ so you can deploy real infrastructure based on your changes.
 Place this in a `.github/workflows` workflow on your repository:
 
 ```yaml
-- uses: systeminit/actions/trigger@main
+- uses: systeminit/actions@main
   with:
     changeSetName: CI
     componentId: 01JH3DZW0QTMH69ZA45299GSWY

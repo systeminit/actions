@@ -5,18 +5,20 @@ on:
       - main
 
 env:
-  GITHUB_TOKEN: ${{ secrets.SI_API_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
 jobs:
   update-dist:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
       - run: npm install
-      - run: npm run bundle
+      - run: npm run package
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           file_pattern: dist/**

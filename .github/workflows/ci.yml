@@ -54,7 +54,7 @@ jobs:
         id: test-action
         uses: systeminit/actions@main
         with:
-          changeSetName: Testing 123
+          changeSet: Testing 123
           componentId: 01JJ4TXDYTKY91R04ET8GCM675
           domain: |
             Region: us-east-1

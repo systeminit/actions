@@ -64,6 +64,7 @@ jobs:
             Region: us-east-1
             BaseCidrBlock: 10.0.0.0/16
             BaseNamingConvention: GitHub Action
+          applyOnSuccess: true
           apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output

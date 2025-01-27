@@ -58,14 +58,12 @@ jobs:
         id: test-action
         uses: systeminit/actions@main
         with:
-          changeSet: 'Testing Action - ${{ env.DATE }}'
+          changeSet: Testing Action - ${{ env.DATE }}
           componentId: 01JJFCNPEGPWFHARX2C3GW98XR
           domain: |
             Region: us-east-1
             BaseCidrBlock: 10.0.0.0/16
             BaseNamingConvention: GitHub Action
-          managementFunction: 'vpcTemplateCreate'
-          applyOnSuccess: false
           apiToken: ${{ secrets.SI_API_TOKEN }}
 
       - name: Print Output

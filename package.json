@@ -22,12 +22,12 @@
     "@actions/core": "^1.11.1",
     "@actions/http-client": "^2.2.3",
     "@rollup/plugin-json": "^6.1.0",
-    "axios": "^1.7.9",
-    "yaml": "^2.7.0"
+    "axios": "^1.11.0",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
-    "@github/local-action": "^2.5.1",
+    "@github/local-action": "^2.2.1",
     "@jest/globals": "^29.7.0",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^16.0.0",

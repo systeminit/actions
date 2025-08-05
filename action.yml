@@ -19,17 +19,20 @@ inputs:
     description: The name of the change set to create to make changes in.
     required: true
   componentId:
-    description: The ID of the component to run the management function on.
-    required: true
-  domain:
+    description: The ID of the component to interact with.
+    required: false
+  component:
+    description: The name of the component to interact with.
+    required: false
+  attributes:
     description: |
-      A YAML or JSON object containing the domain properties to set for the management function component.
+      A YAML or JSON object containing the attributes to set for component.
 
       For example:
 
       ```json
-      domain:
-        Region: us-east-1
+      attributes:
+        /domain/Region: us-east-1
         BaseCidrBlock: 10.0.0.0/16
         Tags: ["tag1", "tag2"]
       ```
@@ -43,10 +46,6 @@ inputs:
     description:
       The name of the management function to run. This is optional if the
       component only has one management function.
-  view:
-    description:
-      The name of view to run inside. This is optional if the component is only
-      in one view.
   applyOnSuccess:
     description:
       Whether to apply the change set to main after triggering the management

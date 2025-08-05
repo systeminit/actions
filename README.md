@@ -2,27 +2,47 @@
 
 Use System Initiative workspaces in your GitHub workflows!
 
-NOTE: this is in early private access, and not yet publicly available.
+You can use this GitHub Action to take the following actions:
 
-## Trigger
+1. Update a component to set properties and subscriptions
+2. Trigger a management function attached to a component
 
-Triggers a
-[management function](https://www.systeminit.com/blog/announcing-management-functions),
-so you can deploy real infrastructure based on your changes.
+## Usage
 
-### Usage
-
-Place this in a `.github/workflows` workflow on your repository:
+### Update Component
 
 ```yaml
-- uses: systeminit/actions@main
+- uses: systeminit/actions@v1
   with:
     changeSetName: CI
-    componentId: 01JH3DZW0QTMH69ZA45299GSWY
-    domain: |
-      a: new A
-      c: new C
-      point/x: new x
+    component: testing-component
+    attributes: |
+      {
+        "/domain/CidrBlock": "10.0.0.0/16",
+        "/secrets/AWS Credential": {
+          "$source": {
+            "component": "demo-credential",
+            "path": "/secrets/AWS Credential"
+          }
+        },
+        "/domain/extra/Region": {
+          "$source": {
+            "component": "us-east-1",
+            "path": "/domain/region"
+          }
+        }
+      }
+    apiToken: ${{ secrets.SI_API_TOKEN }}
+```
+
+### Trigger Managemet Function
+
+```yaml
+- uses: systeminit/actions@v1
+  with:
+    changeSetName: CI
+    component: testing-component
+    managementFunction: 'Run Template'
     apiToken: ${{ secrets.SI_API_TOKEN }}
 ```
 
@@ -37,18 +57,32 @@ run and what properties to set:
 - `changeSetName` is the name of the change set to create when the action runs.
   (You may alternately specify `changeSetId` if you want to use an existing
   change set.)
-- `componentId` is the ID of the management component.
-- `domain` is the list of properties you want to set on your component. You can
-  specify the names of each property you want to set directly (like
-  `CidrBlock`), followed by their value. Any properties you do not specify will
-  be left alone with their current value.
+- `componentId` is the ID of the component.
+- `component` is the name of the component.
+- `managementFunction` is the name of the management function to trigger on the
+  component
+- `attributes` is the list of prop paths you want to set on your component. You
+  can specify the names of each property you want to set directly (like
+  `/domain/CidrBlock`), followed by their value. Any properties you do not
+  specify will be left alone with their current value.
 
   If you have a nested object (like a "point" object with "x", "y" and "z"
   properties) you can use a path to the individual property as its name (e.g.
-  `"point/x": "100"`.
+  `"/domain/point/x": "100"`.
 
-  You may specify this as either YAML or JSON. (The `|` after `domain:` is
-  important, as it must be passed in as a string!)
+  You can also choose to specify prop subscriptions as part of the input, e.g.
+
+```json
+  "/domain/extra/Region": {
+    "$source": {
+      "component": "us-east-1",
+      "path": "/domain/region"
+    }
+  }
+```
+
+You may specify this as either YAML or JSON. (The `|` after `attributes:` is
+important, as it must be passed in as a string!)
 
 ## Getting an API Token
 

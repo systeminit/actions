@@ -46,11 +46,11 @@ export function getApiToken() {
 }
 
 export function getApiUrl() {
-  return core.getInput('apiUrl') || 'https://app.systeminit.com'
+  return core.getInput('apiUrl') || 'https://api.systeminit.com'
 }
 
 export function getWebUrl() {
-  return core.getInput('webUrl') || getApiUrl()
+  return core.getInput('webUrl') || 'https://app.systeminit.com'
 }
 
 export async function sleep(ms: number) {

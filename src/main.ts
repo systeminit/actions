@@ -8,8 +8,7 @@ export async function run() {
     const client = createSiApiClient()
     const workspaceId = await getWorkspaceId(client)
     const changeSet = await getChangeSet(client, workspaceId)
-    await setComponentProperties(client, changeSet)
-    await triggerManagementFunction(client, changeSet)
+    await takeComponentAction(client, changeSet)
     if (await applyChangeSet(client, changeSet)) {
       await waitForChangeSet(client, changeSet)
     }
@@ -22,7 +21,7 @@ async function getWorkspaceId(client: AxiosInstance) {
   let workspaceId = core.getInput('workspaceId')
   if (!workspaceId) {
     core.startGroup('Getting workspaceId from token ...')
-    workspaceId = (await client.get(`/api/whoami`)).data.workspaceId
+    workspaceId = (await client.get(`/whoami`)).data.workspaceId
     core.endGroup()
   }
   core.setOutput('workspaceId', workspaceId)
@@ -30,8 +29,9 @@ async function getWorkspaceId(client: AxiosInstance) {
 }
 
 // Get changeSetId from input (or create if requested)
+// We will error if any of the change set Ids are not open - i.e. Abandoned or Applied
 async function getChangeSet(client: AxiosInstance, workspaceId: string) {
-  const changeSetsUrl = `/api/public/v0/workspaces/${workspaceId}/change-sets`
+  const changeSetsUrl = `/v1/w/${workspaceId}/change-sets`
 
   let changeSetId = core.getInput('changeSetId')
   if (!changeSetId) {
@@ -44,10 +44,17 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
       await client.post(changeSetsUrl, { changeSetName: changeSet })
     ).data.changeSet.id
     core.endGroup()
+  } else {
+    core.startGroup('Getting change set information ...')
+    const changeSet = (await client.get(`${changeSetsUrl}/${changeSetId}`)).data
+      .changeSet
+    if (changeSet.status === 'Applied' || changeSet.status === 'Abandoned') {
+      core.setFailed(`Unable to interact with a non-open change set`)
+    }
   }
 
   core.setOutput('changeSetId', changeSetId)
-  const changeSetWebUrl = `${getWebUrl()}/w/${workspaceId}/${changeSetId}/c}`
+  const changeSetWebUrl = `${getWebUrl()}/n/${workspaceId}/${changeSetId}/h}`
   core.setOutput('changeSetWebUrl', changeSetWebUrl)
   return {
     changeSetId,
@@ -58,102 +65,73 @@ async function getChangeSet(client: AxiosInstance, workspaceId: string) {
 
 type ChangeSet = Awaited<ReturnType<typeof getChangeSet>>
 
-async function setComponentProperties(
+async function takeComponentAction(
   client: AxiosInstance,
   { changeSetWebUrl, changeSetUrl }: ChangeSet
 ) {
-  core.startGroup('Setting component properties ...')
-  // Get workspaceId from input or from whoami if there is no input
+  core.startGroup('Checking component ...')
   const componentId = core.getInput('componentId')
-  const domain = YAML.parse(core.getInput('domain'))
-  await client.put(`${changeSetUrl}/components/${componentId}/properties`, {
-    domain
-  })
-  core.setOutput(
-    'componentWebUrl',
-    `${changeSetWebUrl}?s=c_${componentId}&t=attributes`
-  )
+  const componentName = core.getInput('component')
+  if (!componentName && !componentId) {
+    core.setFailed('Either component or componentId are required')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let componentDetails: any = {}
+  if (componentId) {
+    componentDetails = (
+      await client.get(
+        `${changeSetUrl}/components/find?componentId=${componentId}`
+      )
+    ).data
+  } else {
+    componentDetails = (
+      await client.get(
+        `${changeSetUrl}/components/find?component=${componentName}`
+      )
+    ).data
+  }
+
+  if (!componentDetails) {
+    core.setFailed(
+      'Unable to get the correct component - please check the name or id specified'
+    )
+  }
   core.endGroup()
-}
 
-async function triggerManagementFunction(
-  client: AxiosInstance,
-  { changeSetUrl }: ChangeSet
-) {
-  core.startGroup('Triggering management function ...')
+  const attributes = core.getInput('attributes')
+  if (attributes) {
+    core.startGroup('Checking for component attributes ...')
+    const parsedAttributes = YAML.parse(attributes)
+    await client.put(
+      `${changeSetUrl}/components/${componentDetails.component.id}`,
+      {
+        attributes: parsedAttributes
+      }
+    )
+    core.setOutput('componentWebUrl', `${changeSetWebUrl}${componentId}/c`)
+    core.endGroup()
+  }
 
-  const { componentId, managementPrototypeId, viewId } = await getInputs()
+  const managementFunction = core.getInput('managementFunction')
+  if (managementFunction) {
+    core.startGroup('Checking for component management function execution ...')
+    const {
+      data: { managementFuncJobStateId }
+    } = await client.post(
+      `${changeSetUrl}/components/${componentDetails.component.id}/execute-management-function`,
+      {
+        managementFunction: {
+          function: managementFunction
+        }
+      }
+    )
 
-  const {
-    data: { message }
-  } = await client.post(
-    `${changeSetUrl}/management/prototype/${managementPrototypeId}/${componentId}/${viewId}`,
-    {}
-  )
-  core.setOutput('managementFunctionLogs', message)
-
-  core.endGroup()
-
-  // Look up viewId and managementPrototypeId from component
-  async function getInputs() {
-    const componentId = core.getInput('componentId')
-    let viewId = core.getInput('viewId')
-    let managementPrototypeId = core.getInput('managementPrototypeId')
-
-    console.log('Inferring viewId and managementPrototypeId ...')
-    const data = (await client.get(`${changeSetUrl}/components/${componentId}`))
-      .data as {
-      component: { displayName: string }
-      viewData: { viewId: string; name: string }[]
-      managementFunctions: {
-        managementPrototypeId: string
-        name: string
-      }[]
-    }
-
-    const componentName = data.component.displayName
-
-    // Pick the only view (possibly by name) if not specified
-    if (!viewId) {
-      // If "view" name was specified, narrow down the list.
-      const view = core.getInput('view')
-      const matchingViews = view
-        ? data.viewData.filter((v) => v.name === view)
-        : data.viewData
-      const suffix = view ? ` named "${view}"` : ''
-
-      // Pick the single match (and error if there is not a single match)
-      if (matchingViews.length > 1)
-        throw new Error(
-          `Component ${componentName} has multiple views${suffix}--pick which one to run in using the "view" or "viewId" parameters.\n${data.viewData}`
-        )
-      viewId = matchingViews[0]?.viewId
-      if (!viewId)
-        throw new Error(`Component ${componentName} has no views${suffix}`)
-    }
-
-    // Pick the only management function (possibly by name) if not specified
-    if (!managementPrototypeId) {
-      // If "managementFunction" name was specified, narrow down the list
-      const managementFunction = core.getInput('managementFunction')
-      const matchingFunctions = managementFunction
-        ? data.managementFunctions.filter((f) => f.name === managementFunction)
-        : data.managementFunctions
-      const suffix = managementFunction ? ` named "${managementFunction}"` : ''
-
-      // Pick the single match (and error if there is not a single match)
-      if (matchingFunctions.length > 1)
-        throw new Error(
-          `Component ${componentName} has multiple management functions${suffix}--pick which one to run using the "managementFunction" or "managementPrototypeId" parameters.\n${data.managementFunctions}`
-        )
-      managementPrototypeId = matchingFunctions[0]?.managementPrototypeId
-      if (!managementPrototypeId)
-        throw new Error(
-          `Component ${componentName} has no management functions${suffix}`
-        )
-    }
-
-    return { componentId, viewId, managementPrototypeId }
+    const { data } = await client.get(
+      `${changeSetUrl}/management-funcs/${managementFuncJobStateId}`
+    )
+    core.setOutput('managementFunctionLogs', JSON.stringify(data))
+    core.endGroup()
   }
 }
 
@@ -161,10 +139,20 @@ async function applyChangeSet(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  const applyOnSuccess =
-    core.getInput('applyOnSuccess') === 'force'
-      ? 'force'
-      : core.getBooleanInput('applyOnSuccess')
+  const rawApplyOnSuccess = core.getInput('applyOnSuccess') || 'true'
+
+  let applyOnSuccess: boolean | 'force'
+  if (rawApplyOnSuccess === 'force') {
+    applyOnSuccess = 'force'
+  } else if (['true', 'True', 'TRUE'].includes(rawApplyOnSuccess)) {
+    applyOnSuccess = true
+  } else if (['false', 'False', 'FALSE'].includes(rawApplyOnSuccess)) {
+    applyOnSuccess = false
+  } else {
+    throw new Error(
+      `Invalid value for applyOnSuccess: ${rawApplyOnSuccess}. Expected true, false, or force.`
+    )
+  }
 
   if (!applyOnSuccess) return false
   core.startGroup('Applying change set ...')
@@ -174,7 +162,6 @@ async function applyChangeSet(
         await client.post(`${changeSetUrl}/force_apply`)
         break
       } catch (error) {
-        // TODO wait for dvu roots explicitly, not via errors
         if (
           axios.isAxiosError(error) &&
           error.response?.data?.includes('dvu roots')
@@ -204,12 +191,19 @@ async function waitForChangeSet(client: AxiosInstance, changeSet: ChangeSet) {
   core.endGroup()
 }
 
+function parseBooleanInput(name: string, defaultValue: boolean) {
+  const val = core.getInput(name) || String(defaultValue)
+  if (['true', 'True', 'TRUE'].includes(val)) return true
+  if (['false', 'False', 'FALSE'].includes(val)) return false
+  throw new Error(`Invalid boolean value for ${name}: ${val}`)
+}
+
 async function checkChangeSetStatus(
   client: AxiosInstance,
   { changeSetUrl }: ChangeSet
 ) {
-  const waitForApproval = core.getBooleanInput('waitForApproval')
-  const waitForActions = core.getBooleanInput('waitForActions')
+  const waitForApproval = parseBooleanInput('waitForApproval', false)
+  const waitForActions = parseBooleanInput('waitForActions', true)
 
   const { changeSet, actions } = (
     await client.get(`${changeSetUrl}/merge_status`)
@@ -220,9 +214,6 @@ async function checkChangeSetStatus(
   switch (changeSet.status) {
     /* eslint-disable no-fallthrough */
 
-    /// Planned to be abandoned but needs approval first
-    /// todo(brit): Remove once rebac is done
-    case 'NeedsAbandonApproval':
     /// Planned to be applied but needs approval first
     case 'NeedsApproval':
     /// Approved by relevant parties and ready to be applied

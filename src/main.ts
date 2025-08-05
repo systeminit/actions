@@ -73,11 +73,10 @@ async function takeComponentAction(
   const componentId = core.getInput('componentId')
   const componentName = core.getInput('component')
   if (!componentName && !componentId) {
-    core.setFailed('Either component or componentId are required')
+    throw new Error(`Neither component or componentId is specified`)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let componentDetails: any = {}
+  let componentDetails: { component: { id: string } }
   if (componentId) {
     componentDetails = (
       await client.get(
@@ -93,8 +92,8 @@ async function takeComponentAction(
   }
 
   if (!componentDetails) {
-    core.setFailed(
-      'Unable to get the correct component - please check the name or id specified'
+    throw new Error(
+      `Unable to get the correct component - please check the name or id specified`
     )
   }
   core.endGroup()

@@ -54906,10 +54906,9 @@ async function takeComponentAction(client, { changeSetWebUrl, changeSetUrl }) {
     const componentId = coreExports.getInput('componentId');
     const componentName = coreExports.getInput('component');
     if (!componentName && !componentId) {
-        coreExports.setFailed('Either component or componentId are required');
+        throw new Error(`Neither component or componentId is specified`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let componentDetails = {};
+    let componentDetails;
     if (componentId) {
         componentDetails = (await client.get(`${changeSetUrl}/components/find?componentId=${componentId}`)).data;
     }
@@ -54917,7 +54916,7 @@ async function takeComponentAction(client, { changeSetWebUrl, changeSetUrl }) {
         componentDetails = (await client.get(`${changeSetUrl}/components/find?component=${componentName}`)).data;
     }
     if (!componentDetails) {
-        coreExports.setFailed('Unable to get the correct component - please check the name or id specified');
+        throw new Error(`Unable to get the correct component - please check the name or id specified`);
     }
     coreExports.endGroup();
     const attributes = coreExports.getInput('attributes');

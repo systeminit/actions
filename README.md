@@ -11,6 +11,8 @@ You can use this GitHub Action to take the following actions:
 
 ### Update Component
 
+Attributes in JSON format:
+
 ```yaml
 - uses: systeminit/actions@v1
   with:
@@ -32,6 +34,26 @@ You can use this GitHub Action to take the following actions:
           }
         }
       }
+    apiToken: ${{ secrets.SI_API_TOKEN }}
+```
+
+Attributes in YAML format:
+
+```yaml
+- uses: systeminit/actions@v1
+  with:
+    changeSetName: CI
+    component: testing-component
+    attributes: |
+      "/domain/CidrBlock": "10.0.0.0/16"
+      "/secrets/AWS Credential":
+        $source:
+          component: "demo-credential"
+          path: "/secrets/AWS Credential"
+      "/domain/extra/Region":
+        $source:
+          component: "us-east-1"
+          path: "/domain/region"
     apiToken: ${{ secrets.SI_API_TOKEN }}
 ```
 
@@ -73,12 +95,19 @@ run and what properties to set:
   You can also choose to specify prop subscriptions as part of the input, e.g.
 
 ```json
-  "/domain/extra/Region": {
-    "$source": {
-      "component": "us-east-1",
-      "path": "/domain/region"
-    }
+"/domain/extra/Region": {
+  "$source": {
+    "component": "us-east-1",
+    "path": "/domain/region"
   }
+}
+```
+
+```yaml
+'/domain/extra/Region':
+  $source:
+    component: 'us-east-1'
+    path: '/domain/region'
 ```
 
 You may specify this as either YAML or JSON. (The `|` after `attributes:` is
